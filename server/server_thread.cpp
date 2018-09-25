@@ -26,7 +26,7 @@ AbstractModel* ServerThread::GetModel(uint32_t model_id) {
 void ServerThread::Main() {
     //We might have to know which model need to process.
     auto* work_queue = this->GetWorkQueue();
-    while (work_queue->Size()>0) {
+    while (true) {
         Message m;
         work_queue->WaitAndPop(&m);
         switch (m.meta.flag) {
