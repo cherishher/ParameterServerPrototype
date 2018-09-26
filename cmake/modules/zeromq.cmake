@@ -16,7 +16,7 @@
 ### ZeroMQ ###
 
 # TODO(legend): check zeromq version?
-find_path(ZMQ_INCLUDE_DIR NAMES zmq.h* PATHS ${ZMQ_SEARCH_PATH}) # sometime it appears as .hpp or .h
+find_path(ZMQ_INCLUDE_DIR NAMES zmq.h PATHS ${ZMQ_SEARCH_PATH}) # sometime it appears as .hpp or .h
 find_library(ZMQ_LIBRARY NAMES zmq PATHS ${ZMQ_SEARCH_PATH})
 
 if(ZMQ_INCLUDE_DIR AND ZMQ_LIBRARY)
