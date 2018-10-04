@@ -13,8 +13,8 @@ namespace csci5570 {
  */
 class AbstractPartitionManager {
  public:
-  // using Keys = std::vector<Key>;
-  // using KVPairs = std::pair<std::vector<Key>, std::vector<double>>;
+  using KeysWithVector = std::vector<Key>;
+  using KVPairsWithVector = std::pair<std::vector<Key>, std::vector<double>>;
   using Keys = third_party::SArray<Key>;
   using KVPairs = std::pair<third_party::SArray<Key>, third_party::SArray<double>>;
 
