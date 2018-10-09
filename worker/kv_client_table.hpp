@@ -80,6 +80,15 @@ class KVClientTable {
           msg.AddData(keys);
           sender_queue_->Push(msg);
       }
+      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [vals](Message& msg){
+          third_party::SArray<Val> tmp(msg.data[1]);
+          for (int i = 0; i< tmp.size(); i++) {
+              vals->push_back(tmp[i]);
+          }
+      });
+      callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, [](){
+          return;
+      });
       callback_runner_->NewRequest(app_thread_id_, model_id_, sliced.size());
       callback_runner_->WaitRequest(app_thread_id_, model_id_);
   }
@@ -113,12 +122,17 @@ class KVClientTable {
           msg.AddData(keys);
           sender_queue_->Push(msg);
       }
-      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, KVClientTable::Receive);
-      callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, KVClientTable::FinishReceive);
+      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [vals](Message& msg){
+          third_party::SArray<Val> tmp(msg.data[1]);
+          for (int i = 0; i< tmp.size(); i++) {
+              vals->push_back(tmp[i]);
+          }
+      });
+      callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, [](){
+          return;
+      });
       callback_runner_->NewRequest(app_thread_id_, model_id_, sliced.size());
       callback_runner_->WaitRequest(app_thread_id_, model_id_);
-      vals = value_cash_;
-      value_cash_->clear();
   }
   // ========== API ========== //
 
@@ -129,17 +143,6 @@ class KVClientTable {
   ThreadsafeQueue<Message>* const sender_queue_;             // not owned
   AbstractCallbackRunner* const callback_runner_;            // not owned
   const AbstractPartitionManager* const partition_manager_;  // not owned
-  
-  third_party::SArray<Key>* value_cash_;
-
-  void *Receive(Message& msg){
-    for (int i = 0; i < msg.data[1].size(); i++) {
-      value_cash_->push_back(msg.data[1][i]);
-    }
-  }
-  void *FinishReceive(){
-      //TODO:Need to do anything?
-  }
 
 };  // class KVClientTable
 

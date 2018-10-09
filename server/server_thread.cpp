@@ -32,7 +32,7 @@ void ServerThread::Main() {
         switch (m.meta.flag) {
             case Flag::kExit:
                 this->GetModel(0); //might need remove
-                break;
+                return;
             case Flag::kBarrier:
                 this->GetModel(0); //might need barrier
                 break;
