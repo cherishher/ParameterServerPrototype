@@ -20,6 +20,8 @@ class PendingBuffer {
    * Return the number of pending requests at the specific progress
    */
   virtual int Size(const int progress);
+private:
+  std::map<int, std::vector<Message>> buffer_; // This should be a thread safe mapper
 };
 
 }  // namespace csci5570
