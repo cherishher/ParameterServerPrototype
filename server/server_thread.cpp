@@ -29,24 +29,24 @@ void ServerThread::Main() {
     while (true) {
         Message m;
         work_queue->WaitAndPop(&m);
+        int id = m.meta.model_id;
         switch (m.meta.flag) {
             case Flag::kExit:
-                this->GetModel(0); //might need remove
                 return;
             case Flag::kBarrier:
-                this->GetModel(0); //might need barrier
+                this->GetModel(id); //might need barrier
                 break;
             case Flag::kResetWorkerInModel:
-                this->GetModel(0)->ResetWorker(m);
+                this->GetModel(id)->ResetWorker(m);
                 break;
             case Flag::kClock:
-                this->GetModel(0)->Clock(m);
+                this->GetModel(id)->Clock(m);
                 break;
             case Flag::kAdd:
-                this->GetModel(0)->Add(m);
+                this->GetModel(id)->Add(m);
                 break;
             case Flag::kGet:
-                this->GetModel(0)->Get(m);
+                this->GetModel(id)->Get(m);
                 break;
             default:
                 //error, no such message flags;

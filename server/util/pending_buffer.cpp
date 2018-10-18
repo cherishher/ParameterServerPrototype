@@ -9,8 +9,9 @@ std::vector<Message> PendingBuffer::Pop(const int clock) {
   if ( pos == buffer_.end() ) {
     printf("the pending buffer does not has this clock\n");
   } else {
+    auto msgs = pos->second;
     buffer_.erase(clock);
-    return pos->second;
+    return msgs;
   }
 }
 
