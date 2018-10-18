@@ -5,6 +5,9 @@ namespace csci5570 {
 
 BSPModel::BSPModel(uint32_t model_id, std::unique_ptr<AbstractStorage>&& storage_ptr,
                    ThreadsafeQueue<Message>* reply_queue) {
+	this->model_id = model_id;
+	this->reply_queue_ = reply_queue;
+	this->storage_ = storage_ptr;
   // TODO
 }
 
