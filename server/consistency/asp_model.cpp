@@ -6,6 +6,7 @@ namespace csci5570 {
 ASPModel::ASPModel(uint32_t model_id, std::unique_ptr<AbstractStorage>&& storage_ptr,
                    ThreadsafeQueue<Message>* reply_queue) {
   // TODO
+  this->model_id_ = model_id;
   this->reply_queue_ = reply_queue;
   this->storage_ = std::move(storage_ptr);
 }

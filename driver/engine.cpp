@@ -35,8 +35,8 @@ void Engine::StartEverything(int num_server_threads_per_node) {
   // 4. create/start server threads and register them into ThreadsafeQueue
   StartServerThreads();
   for (int i = 0; i < server_thread_group_.size(); ++i) {
-    ThreadsafeQueue<Message>* queue = server_thread_group_[i]->GetWorkQueue(); // GetWorkQueue defined in Actor
-    mailbox_->RegisterQueue(server_thread_group_[i]->GetId(), queue); // GetID defiend in Actor
+    ThreadsafeQueue<Message>* queue = server_thread_group_[i].GetWorkQueue(); // GetWorkQueue defined in Actor
+    mailbox_->RegisterQueue(server_thread_group_[i].GetId(), queue); // GetID defiend in Actor
   }
   // 5. create/start worker threads and register them by ThreadsafeQueue
   StartWorkerThreads();
@@ -60,7 +60,7 @@ void Engine::CreateMailbox() {
 void Engine::StartServerThreads() {
   std::vector<uint32_t> sids = id_mapper_->GetServerThreadsForId(node_.id);
   for (int i = 0; i < sids.size(); i++){
-    server_thread_group_.push_back(new ServerThread(sids[i]));
+    server_thread_group_.push_back(ServerThread(sids[i]));
   }
   for (int i = 0; i < server_thread_group_.size(); i++){
     server_thread_group_[i].Start();
@@ -147,7 +147,7 @@ void Engine::InitTable(uint32_t table_id, const std::vector<uint32_t>& worker_id
 
 void Engine::Run(const MLTask& task) {
   std::vector<uint32_t> model_ids = task.GetTables();
-  auto wokrallocs = taks.GetWorkerAlloc();
+  auto workallocs = task.GetWorkerAlloc();
   WorkerSpec workerspec = AllocateWorkers(workallocs);
 
   for(auto mid : model_ids){
@@ -156,7 +156,7 @@ void Engine::Run(const MLTask& task) {
 }
 
 void Engine::RegisterPartitionManager(uint32_t table_id, std::unique_ptr<AbstractPartitionManager> partition_manager) {
-  partition_manager_map_[table_id] = partition_manager;
+  partition_manager_map_[table_id] = std::move(partition_manager);
 }
 
 }  // namespace csci5570

@@ -13,6 +13,12 @@
 #include "worker/abstract_callback_runner.hpp"
 #include "worker/worker_thread.hpp"
 
+#include "server/map_storage.hpp"
+#include "server/consistency/asp_model.hpp"
+#include "server/consistency/ssp_model.hpp"
+#include "server/consistency/bsp_model.hpp"
+#include "base/range_partition_manager.hpp"
+
 namespace csci5570 {
 
 enum class ModelType { SSP, BSP, ASP };
@@ -105,15 +111,16 @@ class Engine {
     for(int i = 0; i < server_thread_group_.size(); i++){
       switch(model_type){
         case ModelType::ASP:
-          model.reset(new ASPModel(table_id, std::move(storage), model_staleness, sender_->GetMessageQueue()));
+          model.reset(new ASPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
           break;
         case ModelType::BSP:
           model.reset(new BSPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
           break;
         case ModelType::SSP:
-          model.reset(new SSPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
+          model.reset(new SSPModel(table_id, std::move(storage), model_staleness, sender_->GetMessageQueue()));
           break;
         default:
+          break;
       }
       server_thread_group_[i].RegisterModel(table_id, std::move(model));
     }
