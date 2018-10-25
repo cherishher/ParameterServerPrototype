@@ -34,7 +34,16 @@ struct Info {
    */
   template <typename Val>
   KVClientTable<Val> CreateKVClientTable(uint32_t table_id) const {
-    // TODO
+    partition_manager_map manager;
+    //the key of the 'partition_manager_map' is model id
+    auto pos = partition_manager_map.find(table_id);
+    if ( pos == buffer_.end() ) { // no such clock in the buffer
+      print("cannot find the corresponding messager");
+    } else {
+      manager = pos->second;
+    }
+    KVClientTable<Val> table(thread_id, table_id, send_queue, &manager, callback_runner);
+    return table;
   }
 };
 
