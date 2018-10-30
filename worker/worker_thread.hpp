@@ -14,13 +14,10 @@ namespace csci5570 {
 class AbstractWorkerThread : public Actor {
  public:
   AbstractWorkerThread(uint32_t worker_id) : Actor(worker_id) {}
-  AbstractWorkerThread(uint32_t worker_id, AbstractCallbackRunner* callback_runner) : Actor(worker_id), callback_runner_(callback_runner) {}
 
  protected:
   virtual void OnReceive(Message& msg) = 0;  // callback on receival of a message
-  virtual void Main() override;
- private:
- 	AbstractCallbackRunner* callback_runner_;
+
   // there may be other functions
   //   Wait() and Nofify() for telling when parameters are ready
 

@@ -13,12 +13,6 @@
 #include "worker/abstract_callback_runner.hpp"
 #include "worker/worker_thread.hpp"
 
-#include "server/map_storage.hpp"
-#include "server/consistency/asp_model.hpp"
-#include "server/consistency/ssp_model.hpp"
-#include "server/consistency/bsp_model.hpp"
-#include "base/range_partition_manager.hpp"
-
 namespace csci5570 {
 
 enum class ModelType { SSP, BSP, ASP };
@@ -93,38 +87,7 @@ class Engine {
   template <typename Val>
   uint32_t CreateTable(std::unique_ptr<AbstractPartitionManager> partition_manager, ModelType model_type,
                        StorageType storage_type, int model_staleness = 0) {
-    // each model corresponds to a table
-    uint32_t table_id = model_count_++;
-
-    RegisterPartitionManager(table_id, partition_manager);
-    std::unique_ptr<AbstractStorage> storage;
-
-    switch(storage_type){
-      case StorageType::Map:
-        storage.reset(new MapStorage<Val>());
-        break;
-      default:
-        storage.reset(new MapStorage<Val>());
-    }
-
-    std::unique_ptr<AbstractModel> model;
-    for(int i = 0; i < server_thread_group_.size(); i++){
-      switch(model_type){
-        case ModelType::ASP:
-          model.reset(new ASPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
-          break;
-        case ModelType::BSP:
-          model.reset(new BSPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
-          break;
-        case ModelType::SSP:
-          model.reset(new SSPModel(table_id, std::move(storage), model_staleness, sender_->GetMessageQueue()));
-          break;
-        default:
-          break;
-      }
-      server_thread_group_[i].RegisterModel(table_id, std::move(model));
-    }
-    return table_id;
+    // TODO
   }
 
   /**
@@ -139,19 +102,7 @@ class Engine {
    */
   template <typename Val>
   uint32_t CreateTable(ModelType model_type, StorageType storage_type, int model_staleness = 0) {
-    // get server thread ids
-    const std::vector<uint32_t> sids = id_mapper_->GetAllServerThreads();
-    
-    // build ranges
-    int count = sids.size();
-    std::vector<third_party::Range> ranges(count);
-    //  TODO... implement ranges
-
-    // build partition manager
-    std::unique_ptr<AbstractPartitionManager> partition_manager;
-    partition_manager.reset(new RangePartitionManager(sids, ranges));
-    uint32_t table_id = CreateTable<Val>(partition_manager, model_type, storage_type, model_staleness);
-    return table_id;
+    // TODO
   }
 
   /**
