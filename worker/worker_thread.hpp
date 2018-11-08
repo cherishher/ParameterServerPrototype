@@ -3,6 +3,7 @@
 #include "base/actor_model.hpp"
 #include "base/message.hpp"
 #include "base/threadsafe_queue.hpp"
+#include "worker/abstract_callback_runner.hpp"
 
 #include <condition_variable>
 #include <memory>
@@ -26,5 +27,36 @@ class AbstractWorkerThread : public Actor {
   //   some locking mechanism for notifying when parameters are ready
   //   a counter of msgs from servers, etc.
 };
+
+class WorkerHelperThread : public AbstractWorkerThread {
+ public:
+  WorkerHelperThread(uint32_t worker_id, DefaultCallbackRunner* callback_runner)
+      : AbstractWorkerThread(worker_id), callback_runner_(callback_runner) {}
+
+ protected:
+  void OnReceive(Message& msg) {
+      callback_runner_->AddResponse(msg.meta.recver,msg.meta.model_id,msg);
+   }
+
+  void Main() {
+    while(true){
+      Message msg;
+      work_queue_.WaitAndPop(&msg);
+
+      switch (msg.meta.flag) {
+        case Flag::kExit:
+          return;
+        case Flag::kGet:
+          this->OnReceive(msg);
+          break;
+        default:
+          break;   
+      }
+    }
+  }
+
+ private:
+  DefaultCallbackRunner* callback_runner_;
+}
 
 }  // namespace csci5570
