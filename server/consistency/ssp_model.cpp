@@ -23,20 +23,20 @@ void SSPModel::Clock(Message& msg) {
 
 void SSPModel::Add(Message& msg) {
   // TODO
-  if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() < staleness_) {
+  if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
     storage_->Add(msg);
   } else {
-    buffer_.Push(progress_tracker_.GetMinClock() + 1, msg);
+    buffer_.Push(GetProgress(msg.meta.sender) - staleness_, msg);
   }
 }
 
 void SSPModel::Get(Message& msg) {
   // TODO
-  if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() < staleness_) {
+  if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
     Message reply = storage_->Get(msg);
     reply_queue_->Push(reply);
   } else {
-    buffer_.Push(progress_tracker_.GetMinClock() + 1, msg);
+    buffer_.Push(GetProgress(msg.meta.sender) - staleness_, msg);
   }
 }
 
