@@ -30,7 +30,7 @@ class AbstractWorkerThread : public Actor {
 
 class WorkerHelperThread : public AbstractWorkerThread {
  public:
-  WorkerHelperThread(uint32_t worker_id, DefaultCallbackRunner* callback_runner)
+  WorkerHelperThread(uint32_t worker_id, AbstractCallbackRunner* callback_runner)
       : AbstractWorkerThread(worker_id), callback_runner_(callback_runner) {}
 
  protected:
@@ -56,7 +56,7 @@ class WorkerHelperThread : public AbstractWorkerThread {
   }
 
  private:
-  DefaultCallbackRunner* callback_runner_;
-}
+  AbstractCallbackRunner* callback_runner_;
+};
 
 }  // namespace csci5570

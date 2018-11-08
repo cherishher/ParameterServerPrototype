@@ -30,23 +30,29 @@ void ServerThread::Main() {
         Message m;
         work_queue->WaitAndPop(&m);
         int id = m.meta.model_id;
+        if(m.meta.flag == Flag::kExit){
+          return;
+        }
+        auto* ptr = GetModel(id);
+        if(ptr == nullptr){
+          continue;
+        }
         switch (m.meta.flag) {
             case Flag::kExit:
                 return;
             case Flag::kBarrier:
-                this->GetModel(id); //might need barrier
                 break;
             case Flag::kResetWorkerInModel:
-                this->GetModel(id)->ResetWorker(m);
+                ptr->ResetWorker(m);
                 break;
             case Flag::kClock:
-                this->GetModel(id)->Clock(m);
+                ptr->Clock(m);
                 break;
             case Flag::kAdd:
-                this->GetModel(id)->Add(m);
+                ptr->Add(m);
                 break;
             case Flag::kGet:
-                this->GetModel(id)->Get(m);
+                ptr->Get(m);
                 break;
             default:
                 //error, no such message flags;

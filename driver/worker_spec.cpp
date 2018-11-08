@@ -25,6 +25,10 @@ std::vector<uint32_t> WorkerSpec::GetAllThreadIds() {
   return std::vector<uint32_t>(thread_ids_.begin(), thread_ids_.end());
 }
 
+const std::map<uint32_t, uint32_t>& WorkerSpec::GetWorkerToThreadMapper() const {
+  return worker_to_thread_;
+}
+
 void WorkerSpec::InsertWorkerIdThreadId(uint32_t worker_id, uint32_t thread_id) {
   worker_to_thread_[worker_id] = thread_id;
   thread_to_worker_[thread_id] = worker_id;

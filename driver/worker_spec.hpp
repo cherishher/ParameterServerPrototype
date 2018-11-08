@@ -48,6 +48,11 @@ class WorkerSpec {
   std::vector<uint32_t> GetAllThreadIds();
 
   /**
+   * Returns all worker threads
+   */
+  const std::map<uint32_t, uint32_t>& GetWorkerToThreadMapper() const;
+  
+  /**
    * Register worker id (specific to a task) along with the corresponding thread id
    */
   void InsertWorkerIdThreadId(uint32_t worker_id, uint32_t thread_id);
