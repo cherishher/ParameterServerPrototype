@@ -19,16 +19,17 @@ void SimpleIdMapper::Init(int num_server_threads_per_node) {
     for (auto node : nodes_) {
       for (int i = 0; i < num_server_threads_per_node; i++) {
         // node2server_.insert(std::make_pair(node.id,node.id*kMaxThreadsPerNode+i));
-        std::vector<uint32_t> serverThread;
-        serverThread.insert(serverThread.begin() + i, node.id * kMaxThreadsPerNode);
-        node2server_[node.id] = serverThread;
+        std::vector<uint32_t> serverThreads;
+        printf("?????????we want to find server id is: %d\n",node.id * kMaxThreadsPerNode+i);
+        serverThreads.push_back(node.id * kMaxThreadsPerNode+i);
+        node2server_[node.id] = serverThreads;
       }
       std::vector<uint32_t> workerHelperThread;
-      workerHelperThread.insert(workerHelperThread.begin(), kWorkerHelperThreadId + node.id * kMaxThreadsPerNode);
+      workerHelperThread.push_back(kWorkerHelperThreadId + node.id * kMaxThreadsPerNode);
       node2worker_helper_.insert(std::make_pair(node.id, workerHelperThread));
 
       std::set<uint32_t> workerThreads;
-      workerThreads.insert(node_.id*kMaxThreadsPerNode+kWorkerHelperThreadId+1);
+      //workerThreads.insert(node_.id*kMaxThreadsPerNode+kWorkerHelperThreadId+1);
       node2worker_.insert(std::make_pair(node_.id,workerThreads));
     };
   }
@@ -39,14 +40,18 @@ uint32_t SimpleIdMapper::AllocateWorkerThread(uint32_t node_id) {
   try {
     if (node2worker_[node_id].size() >= 0 && node2worker_[node_id].size() < kMaxThreadsPerNode - kMaxBgThreadsPerNode) {
       std::set<uint32_t> workerSet = node2worker_[node_id];
-      allocateId = node_id * (kMaxThreadsPerNode + kMaxBgThreadsPerNode) + node2worker_[node_id].size();
-      workerSet.insert(allocateId);
-      node2worker_[node_id] = workerSet;
-    } else if(node2worker_[node_id].size() == 0){
-      std::set<uint32_t> workerSet;
-      allocateId = node_id * (kMaxThreadsPerNode + kMaxBgThreadsPerNode);
-      workerSet.insert(allocateId);
-      node2worker_[node_id] = workerSet;
+      if(workerSet.size()< kMaxThreadsPerNode - kMaxBgThreadsPerNode){
+        uint32_t start = node_id * kMaxThreadsPerNode + kMaxBgThreadsPerNode;
+        uint32_t end = (node_id+1) * kMaxThreadsPerNode;
+        for(uint32_t id = start ;id < end ; id++){
+          if (workerSet.find(id) == workerSet.end()) {
+            allocateId = id;
+            workerSet.insert(allocateId);
+            node2worker_[node_id] = workerSet;
+            break;
+          }
+        }
+      }
     }else{
       allocateId == -1;
     }

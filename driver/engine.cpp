@@ -29,28 +29,22 @@ namespace csci5570 {
   void Engine::StartEverything(int num_server_threads_per_node) {
     // 1. create an id_mapper
     CreateIdMapper(num_server_threads_per_node);
-    printf("create id mapper \n");
     // 2. create an mailbox
     CreateMailbox();
-    printf("create mail box \n");
     // 3. start sender
     StartSender();
-    printf("start sender \n");
     // 4. create/start server threads and register them into ThreadsafeQueue
     StartServerThreads();
-    printf("start server threads \n");
     for (int i = 0; i < server_thread_group_.size(); ++i) {
       ThreadsafeQueue<Message>* queue = server_thread_group_[i].get()->GetWorkQueue(); // GetWorkQueue defined in Actor
       mailbox_->RegisterQueue(server_thread_group_[i].get()->GetId(), queue); // GetID defiend in Actor
     }
     // 5. create/start worker threads and register them by ThreadsafeQueue
     StartWorkerThreads();
-    printf("start worker threads \n");
     ThreadsafeQueue<Message>* queue = worker_thread_->GetWorkQueue();
     mailbox_->RegisterQueue(worker_thread_->GetId(), queue);
     // 6. start communication
     StartMailbox();
-    printf("start mail box \n");
   }
   
   void Engine::CreateIdMapper(int num_server_threads_per_node) {
@@ -67,24 +61,18 @@ namespace csci5570 {
   void Engine::StartServerThreads() {
     std::vector<uint32_t> sids = id_mapper_->GetServerThreadsForId(node_.id);
     for (int i = 0; i < sids.size(); i++){
-      //printf("hahha");
       std::unique_ptr<ServerThread> ptr(new ServerThread(sids[i]));
-      //printf("hahha1");
       server_thread_group_.push_back(std::move(ptr));
-      //printf("hahha2");
     }
     for (int i = 0; i < server_thread_group_.size(); i++){
       server_thread_group_[i].get()->Start();
     }
   }
   void Engine::StartWorkerThreads() { // ? s?
-    uint32_t wid = id_mapper_->AllocateWorkerThread(node_.id);
-    //std::vector<uint32_t> wids = id_mapper_->GetWorkerThreadsForId(node_.id);
-    // for (int i = 0; i < wids.size(); i++){
-    //   worker_thread_group_.push_back(new AbstractWorkerThread(wid));
-    // }
+    std::vector<uint32_t> wids = id_mapper_->GetWorkerHelperThreadsForId(node_.id);
+    //we explictly assume that there is only one worker helper thread in wids. ???
     callback_runner_.reset(new DefaultCallbackRunner());
-    worker_thread_.reset(new WorkerHelperThread(wid, callback_runner_.get())); // need to modify worker_thread!!! call_back logic
+    worker_thread_.reset(new WorkerHelperThread(wids[0], callback_runner_.get())); // need to modify worker_thread!!! call_back logic
     worker_thread_->Start();
   }
   
@@ -107,18 +95,13 @@ namespace csci5570 {
   void Engine::StopEverything() {
     // 1. Stop sender
     StopSender();
-    printf("1\n");
     // 2. Stop mailbox
     Barrier();
-    printf("2\n");
     StopMailbox();
-    printf("3\n");
     // 3. Stop server thread
     StopServerThreads();
-    printf("4\n");
     // 4. Stop worker thread
     StopWorkerThreads();
-    printf("5\n");
   }
   
   void Engine::StopServerThreads() {
@@ -150,15 +133,12 @@ namespace csci5570 {
   // WorkerAlloc defined in ml_task; including uint32_t node_id and uint32_t num_workers;
   WorkerSpec Engine::AllocateWorkers(const std::vector<WorkerAlloc>& worker_alloc) {
     WorkerSpec worker_spec(worker_alloc);
-    for (int i = 0; i < worker_alloc.size(); i++) {
-      uint32_t node_id = worker_alloc[i].node_id;
-      
-      auto wids = worker_spec.GetLocalWorkers(node_id);
-      
-      for (auto wid: wids) {
-        uint32_t uid = id_mapper_->AllocateWorkerThread(node_.id);
-        worker_spec.InsertWorkerIdThreadId(wid, uid);
-      }
+    auto wids = worker_spec.GetLocalWorkers(node_.id);
+    ThreadsafeQueue<Message>* queue = worker_thread_->GetWorkQueue();
+    for (auto wid: wids) {
+      uint32_t uid = id_mapper_->AllocateWorkerThread(node_.id);
+      worker_spec.InsertWorkerIdThreadId(wid, uid);
+      mailbox_->RegisterQueue(uid, queue);
     }
     return worker_spec;
   }
@@ -174,48 +154,48 @@ namespace csci5570 {
       datas.push_back(wid);
     }
     msg.AddData(datas);
-    for (int i = 0; i < server_thread_group_.size(); ++i) {
+    for (int i = 0; i < server_thread_group_.size(); i++) {
       msg.meta.recver = server_thread_group_[i].get()->GetId();
       sender_.get()->GetMessageQueue()->Push(msg);
     }
   }
   
   void Engine::Run(const MLTask& task) {
-    printf("RUN1\n");
-    std::vector<uint32_t> model_ids = task.GetTables();
-    auto workallocs = task.GetWorkerAlloc();
+    //allocate worker threads, and get worker spec for this task.
+    std::vector<WorkerAlloc> workallocs = task.GetWorkerAlloc();
     WorkerSpec workerspec = AllocateWorkers(workallocs);
-    
+    //init tables
+    std::vector<uint32_t> model_ids = task.GetTables();
     for(auto mid : model_ids){
       InitTable(mid, workerspec.GetAllThreadIds());
     }
-    printf("RUN2\n");
-    std::map<uint32_t, uint32_t> worker_to_thread = workerspec.GetWorkerToThreadMapper();
-    std::vector<uint32_t> wids = id_mapper_->GetWorkerThreadsForId(node_.id);
-    std::vector<std::thread> threads(wids.size());
-    
+    //transfer partition_manager_map_ to expected type, use this in generate info.
     std::map<uint32_t, AbstractPartitionManager*> tmp;
     for (std::map<uint32_t,std::unique_ptr<AbstractPartitionManager>>::iterator it=partition_manager_map_.begin(); it!=partition_manager_map_.end(); ++it){
       tmp[it->first] = it->second.get();
     }
-    printf("RUN3\n");
-    for (int i = 0; i < wids.size(); i++) {
-      uint32_t wid = wids[i];
-      auto it = worker_to_thread.find(wids[i]);
+    
+    //join threads.
+    std::vector<uint32_t> wids = workerspec.GetLocalWorkers(node_.id);
+    std::map<uint32_t, uint32_t> worker_to_thread = workerspec.GetWorkerToThreadMapper();
+    std::vector<std::thread> threads(wids.size());
+    for(int j = 0; j < wids.size(); j++){
+      //get find corresponding worker id
+      auto it = worker_to_thread.find(wids[j]);
       Info info;
       info.thread_id = it->second;
       info.worker_id = it->first;
       info.send_queue = sender_.get()->GetMessageQueue();
       info.partition_manager_map = tmp;
       info.callback_runner = callback_runner_.get();
-      threads[i] =  std::thread([task, info](){
+      printf("###################the info is :%s\n",info.DebugString().c_str());
+      threads[j] = std::thread([task, info](){
         task.RunLambda(info);
       });
     }
     for (auto& th : threads) {
       th.join();
     }
-    printf("RUN4\n");
   }
   
   void Engine::RegisterPartitionManager(uint32_t table_id, std::unique_ptr<AbstractPartitionManager> partition_manager) {

@@ -28,6 +28,7 @@ void ServerThread::Main() {
     auto* work_queue = this->GetWorkQueue();
     while (true) {
         Message m;
+        printf("!!!!!1Main() in the server helper thread and server helper queue size is %d\n",work_queue_.Size());
         work_queue->WaitAndPop(&m);
         int id = m.meta.model_id;
         if(m.meta.flag == Flag::kExit){
@@ -43,15 +44,18 @@ void ServerThread::Main() {
             case Flag::kBarrier:
                 break;
             case Flag::kResetWorkerInModel:
+                printf("!!!!1server receive message reset\n");
                 ptr->ResetWorker(m);
                 break;
             case Flag::kClock:
                 ptr->Clock(m);
                 break;
             case Flag::kAdd:
+                printf("!!!!1server receive message add\n");
                 ptr->Add(m);
                 break;
             case Flag::kGet:
+                printf("!!!!!server receive message get\n");
                 ptr->Get(m);
                 break;
             default:

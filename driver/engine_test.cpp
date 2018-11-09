@@ -122,10 +122,8 @@ TEST_F(TestEngine, KVClientTableMapStorage) {
   Engine engine(node, {node});
   // start
   engine.StartEverything();
-  printf("what the fuck1\n");
   const auto kTableId = engine.CreateTable<double>(ModelType::SSP, StorageType::Map);  // table 0
   engine.Barrier();
-   printf("what the fuck2\n");
   MLTask task;
   task.SetWorkerAlloc({{0, 3}});  // 3 workers on node 0
   task.SetTables({kTableId});     // Use table 0
@@ -136,7 +134,7 @@ TEST_F(TestEngine, KVClientTableMapStorage) {
     KVClientTable<double> table(info.thread_id, kTableId, info.send_queue,
                                 info.partition_manager_map.find(kTableId)->second, info.callback_runner);
     for (int i = 0; i < 5; ++i) {
-      printf("get table index %d\n", i);
+      printf("^^^^^^^^^^^^^ i is %d\n", i);
       std::vector<Key> keys{1};
       std::vector<double> vals{0.5};
       table.Add(keys, vals);
@@ -146,9 +144,7 @@ TEST_F(TestEngine, KVClientTableMapStorage) {
       LOG(INFO) << ret[0];
     }
   });
-  printf("what the fuck3\n");
   engine.Run(task);
-  printf("what the fuck4\n");
 
   // stop
   engine.StopEverything();

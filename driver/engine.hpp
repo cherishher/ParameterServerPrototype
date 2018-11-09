@@ -146,7 +146,7 @@ namespace csci5570 {
       int count = sids.size();
       std::vector<third_party::Range> ranges(count);
       //  TODO... implement ranges
-      ranges = {{0, 100}};
+      ranges = {{0,20},{20,40},{40,60},{60,80},{80,100},{100,120}};
       // build partition manager
       std::unique_ptr<AbstractPartitionManager> partition_manager(new RangePartitionManager(sids, ranges));
       uint32_t table_id = CreateTable<Val>(std::move(partition_manager), model_type, storage_type, model_staleness);

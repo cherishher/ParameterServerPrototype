@@ -57,6 +57,7 @@ class DefaultCallbackRunner: public AbstractCallbackRunner {
         });
     }
     void AddResponse(uint32_t app_thread_id, uint32_t model_id, Message& msg) {
+      printf("have we done here?\n");
       bool recv_finish = false;
       auto &tracker = trackers_[app_thread_id][model_id];
       {
