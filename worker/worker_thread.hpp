@@ -35,7 +35,6 @@ class WorkerHelperThread : public AbstractWorkerThread {
 
  protected:
   void OnReceive(Message& msg) {
-      printf("worker helper thread on receive\n");
       callback_runner_->AddResponse(msg.meta.sender,msg.meta.model_id,msg);
    }
 
@@ -43,36 +42,27 @@ class WorkerHelperThread : public AbstractWorkerThread {
     //printf("Main() in the worker helper thread and worker helper queue size is %d\n",work_queue_.Size());
     auto* work_queue = this->GetWorkQueue();
     while (true) {
-      printf("Main() in the worker helper thread and worker helper queue size is %d\n",work_queue_.Size());
       Message m;
       work_queue->WaitAndPop(&m);
       if(m.meta.flag == Flag::kExit){
-        printf("receive message exit\n");
         return;
       }
       switch (m.meta.flag) {
-          printf("receive message exit\n");
         case Flag::kExit:
           return;
         case Flag::kGet:
-          printf("receive message get\n");
           this->OnReceive(m);
           break;
         case Flag::kAdd:
-          printf("receive message add\n");
           this->OnReceive(m);
           break;
         case Flag::kClock:
-          printf("receive message clock\n");
           break;
         case Flag::kResetWorkerInModel:
-          printf("receive message reset\n");
           break;
         case Flag::kBarrier:
-          printf("receive message barrier\n");
           break;
         default:
-          printf("receive uknown message\n");
           break;   
       }
     }

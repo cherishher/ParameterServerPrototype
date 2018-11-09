@@ -32,13 +32,11 @@ void SSPModel::Add(Message& msg) {
 
 void SSPModel::Get(Message& msg) {
   // TODO
-  printf("@@@@@@@@@ GetProgress(msg.meta.sender) is %d, progress_tracker_.GetMinClock() is %d, staleness_ is %d\n", GetProgress(msg.meta.sender), progress_tracker_.GetMinClock(), staleness_);
+  progress_tracker_.GetMinClock(), staleness_);
   if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
-    printf("00000000000ssp model get method if\n");
     Message reply = storage_->Get(msg);
     reply_queue_->Push(reply);
   } else {
-    printf("00000000000ssp model get method else\n");
     buffer_.Push(GetProgress(msg.meta.sender) - staleness_, msg);
   }
 }

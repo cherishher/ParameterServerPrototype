@@ -20,7 +20,6 @@ void SimpleIdMapper::Init(int num_server_threads_per_node) {
       for (int i = 0; i < num_server_threads_per_node; i++) {
         // node2server_.insert(std::make_pair(node.id,node.id*kMaxThreadsPerNode+i));
         std::vector<uint32_t> serverThreads;
-        printf("?????????we want to find server id is: %d\n",node.id * kMaxThreadsPerNode+i);
         serverThreads.push_back(node.id * kMaxThreadsPerNode+i);
         node2server_[node.id] = serverThreads;
       }

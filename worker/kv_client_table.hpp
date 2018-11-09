@@ -91,7 +91,6 @@ class KVClientTable {
       });
       callback_runner_->NewRequest(app_thread_id_, model_id_, sliced.size());
       callback_runner_->WaitRequest(app_thread_id_, model_id_);
-      printf("kvClientTable check6\n");
   }
   // sarray version
   void Add(const third_party::SArray<Key>& keys, const third_party::SArray<Val>& vals) {

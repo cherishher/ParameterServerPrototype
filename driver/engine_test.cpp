@@ -50,9 +50,7 @@ TEST_F(TestEngine, StartEverything) {
   Node node{0, "localhost", 12353};
   Engine engine(node, {node});
   engine.StartEverything();
-  printf("what the fuck1\n");
   engine.StopEverything();
-  printf("what the fuck2\n");
 }
 
 TEST_F(TestEngine, MultipleStartEverything) {  // start three engines on the localhost
@@ -134,7 +132,6 @@ TEST_F(TestEngine, KVClientTableMapStorage) {
     KVClientTable<double> table(info.thread_id, kTableId, info.send_queue,
                                 info.partition_manager_map.find(kTableId)->second, info.callback_runner);
     for (int i = 0; i < 5; ++i) {
-      printf("^^^^^^^^^^^^^ i is %d\n", i);
       std::vector<Key> keys{1};
       std::vector<double> vals{0.5};
       table.Add(keys, vals);

@@ -10,7 +10,6 @@ void ProgressTracker::Init(const std::vector<uint32_t>& tids) {
     progresses_[tid] = 0;
   }
   min_clock_ = 0;
-  printf("WWWWWWWWWWWWWWEEEEEEEEEEE IIIIIIINNNNNNNIIIIIIITTTTTT progress tracker, min_clock is %d, progress_tracker_.GetMinClock() is %d\n", min_clock_, GetMinClock());
   
 }
   
