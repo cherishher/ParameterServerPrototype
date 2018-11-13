@@ -44,6 +44,7 @@ void WorkerSpec::InsertWorkerIdThreadId(uint32_t worker_id, uint32_t thread_id) 
 
 void WorkerSpec::Init(const std::vector<WorkerAlloc>& worker_alloc) {
   std::vector<uint32_t> workers;
+  num_workers_ = 0;
   for (auto ele : worker_alloc) {
     workers.resize(ele.num_workers);
     for (int i = 0; i < ele.num_workers; ++i) {

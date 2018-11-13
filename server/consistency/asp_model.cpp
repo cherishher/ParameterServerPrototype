@@ -13,17 +13,20 @@ ASPModel::ASPModel(uint32_t model_id, std::unique_ptr<AbstractStorage>&& storage
 
 void ASPModel::Clock(Message& msg) {
   // TODO
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   int tid = msg.meta.sender;
   progress_tracker_.AdvanceAndGetChangedMinClock(tid);
 }
 
 void ASPModel::Add(Message& msg) {
   // TODO
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   storage_->Add(msg);
 }
 
 void ASPModel::Get(Message& msg) {
   // TODO
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   Message message = storage_->Get(msg);
   reply_queue_->Push(message);
 }

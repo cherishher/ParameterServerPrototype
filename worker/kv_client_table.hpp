@@ -57,7 +57,7 @@ class KVClientTable {
           msg.meta.model_id = model_id_;
           msg.meta.flag = Flag::kAdd;
           third_party::SArray<Key> keys(sliced[i].second.first);
-          third_party::SArray<float> vals(sliced[i].second.second);
+          third_party::SArray<Val> vals(sliced[i].second.second);
           msg.AddData(keys);
           msg.AddData(vals);
           sender_queue_->Push(msg);
@@ -103,7 +103,7 @@ class KVClientTable {
           msg.meta.model_id = model_id_;
           msg.meta.flag = Flag::kAdd;
           third_party::SArray<Key> keys(sliced[i].second.first);
-          third_party::SArray<float> vals(sliced[i].second.second);
+          third_party::SArray<Val> vals(sliced[i].second.second);
           msg.AddData(keys);
           msg.AddData(vals);
           sender_queue_->Push(msg);

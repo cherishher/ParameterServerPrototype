@@ -13,6 +13,7 @@ BSPModel::BSPModel(uint32_t model_id, std::unique_ptr<AbstractStorage>&& storage
 
 void BSPModel::Clock(Message& msg) {
   // TODO
+	if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
 	int tid = msg.meta.sender; // the worker that finish its iteration
  	if (progress_tracker_.CheckThreadValid(tid)) {
   		int temp = progress_tracker_.AdvanceAndGetChangedMinClock(tid); // increase its progress
@@ -37,6 +38,7 @@ void BSPModel::Clock(Message& msg) {
 
 void BSPModel::Add(Message& msg) {
   // TODO
+	if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
 	add_buffer_.push_back(msg);
 	// int tid = msg.meta.sender;
 	// if(progress_tracker_.GetProgress(tid) == progress_tracker_.GetMinClock()){
@@ -48,6 +50,7 @@ void BSPModel::Add(Message& msg) {
 
 void BSPModel::Get(Message& msg) {
   // TODO
+	if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
 	int tid = msg.meta.sender;
 	if(progress_tracker_.GetProgress(tid) == progress_tracker_.GetMinClock()){
 		Message reply = storage_->Get(msg);
@@ -81,8 +84,12 @@ void BSPModel::ResetWorker(Message& msg) {
 		tids_v.push_back(tids[i]);
 	}
 	progress_tracker_.Init(tids_v);
-	msg.meta.flag = Flag::kResetWorkerInModel;
-	reply_queue_->Push(msg);
+	Message message;
+  message.meta.model_id = model_id_;
+  message.meta.recver = msg.meta.sender;
+  message.meta.sender = msg.meta.recver;
+  message.meta.flag = Flag::kResetWorkerInModel;
+  reply_queue_->Push(message);
 }
 
 }  // namespace csci5570

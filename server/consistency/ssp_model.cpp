@@ -11,6 +11,7 @@ SSPModel::SSPModel(uint32_t model_id, std::unique_ptr<AbstractStorage>&& storage
 
 void SSPModel::Clock(Message& msg) {
   // TODO
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   int cur_mini_clock = progress_tracker_.AdvanceAndGetChangedMinClock(msg.meta.sender);
   if (cur_mini_clock != -1 && GetPendingSize(cur_mini_clock) > 0) {// min_clock changed, process pending messages if needed
     auto pendingMsgs = buffer_.Pop(cur_mini_clock);
@@ -23,6 +24,8 @@ void SSPModel::Clock(Message& msg) {
 
 void SSPModel::Add(Message& msg) {
   // TODO
+  LOG(INFO) << msg.DebugString();
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
     storage_->Add(msg);
   } else {
@@ -32,7 +35,7 @@ void SSPModel::Add(Message& msg) {
 
 void SSPModel::Get(Message& msg) {
   // TODO
-  progress_tracker_.GetMinClock(), staleness_);
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
     Message reply = storage_->Get(msg);
     reply_queue_->Push(reply);

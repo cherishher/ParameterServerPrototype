@@ -43,6 +43,7 @@ class RangePartitionManager : public AbstractPartitionManager {
   			if(threadid == (*sliced)[i2].first){
   				existTag = true;
   				sliceid = i2;
+				break;
   			}
   		}
 
@@ -83,6 +84,7 @@ class RangePartitionManager : public AbstractPartitionManager {
   			if(threadid == (*sliced)[i2].first){
   				existTag = true;
   				sliceid = i2;
+				break;
   			}
   		}
 

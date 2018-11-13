@@ -21,7 +21,7 @@ class MapStorage : public AbstractStorage {
     // TODO
     // what if there are some same keys.
     for (int i = 0; i < typed_keys.size(); i++){
-      storage_.insert(std::make_pair(typed_keys[i], typed_vals[i]));
+      storage_[typed_keys[i]] = typed_vals[i];
     }
   }
 
