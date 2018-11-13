@@ -35,7 +35,7 @@ class WorkerHelperThread : public AbstractWorkerThread {
 
  protected:
   void OnReceive(Message& msg) {
-      callback_runner_->AddResponse(msg.meta.sender,msg.meta.model_id,msg);
+      callback_runner_->AddResponse(msg.meta.recver,msg.meta.model_id,msg);
    }
 
   void Main() {
@@ -48,21 +48,8 @@ class WorkerHelperThread : public AbstractWorkerThread {
         return;
       }
       switch (m.meta.flag) {
-        case Flag::kExit:
-          return;
         case Flag::kGet:
           this->OnReceive(m);
-          break;
-        case Flag::kAdd:
-          this->OnReceive(m);
-          break;
-        case Flag::kClock:
-          break;
-        case Flag::kResetWorkerInModel:
-          break;
-        case Flag::kBarrier:
-          break;
-        default:
           break;   
       }
     }

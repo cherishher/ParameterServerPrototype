@@ -71,8 +71,8 @@ namespace csci5570 {
   void Engine::StartWorkerThreads() { // ? s?
     std::vector<uint32_t> wids = id_mapper_->GetWorkerHelperThreadsForId(node_.id);
     //we explictly assume that there is only one worker helper thread in wids. ???
-    //callback_runner_.reset(new DefaultCallbackRunner());
-    callback_runner_.reset(new FakeCallbackRunner1());
+    callback_runner_.reset(new DefaultCallbackRunner());
+    // callback_runner_.reset(new FakeCallbackRunner1());
     worker_thread_.reset(new WorkerHelperThread(wids[0], callback_runner_.get())); // need to modify worker_thread!!! call_back logic
     worker_thread_->Start();
   }

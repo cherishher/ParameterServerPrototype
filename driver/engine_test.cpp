@@ -132,6 +132,7 @@ TEST_F(TestEngine, KVClientTableMapStorage) {
     KVClientTable<double> table(info.thread_id, kTableId, info.send_queue,
                                 info.partition_manager_map.find(kTableId)->second, info.callback_runner);
     for (int i = 0; i < 5; ++i) {
+      LOG(INFO) << info.thread_id << ": i " << i;
       std::vector<Key> keys{1};
       std::vector<double> vals{0.5};
       table.Add(keys, vals);

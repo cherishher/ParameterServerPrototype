@@ -24,7 +24,6 @@ void SSPModel::Clock(Message& msg) {
 
 void SSPModel::Add(Message& msg) {
   // TODO
-  LOG(INFO) << msg.DebugString();
   if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
     storage_->Add(msg);
