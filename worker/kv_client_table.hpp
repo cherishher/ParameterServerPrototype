@@ -37,7 +37,17 @@ class KVClientTable {
         callback_runner_(callback_runner){};
 
   // ========== API ========== //
-  void Clock();
+  void Clock() {
+      Message msg;
+      msg.meta.flag = Flag::kClock;
+      msg.meta.model_id = model_id_;
+      msg.meta.sender = app_thread_id_;
+      auto sids = partition_manager_->GetServerThreadIds();
+      for (auto sid : sids) {
+          msg.meta.recver = sid;
+          sender_queue_->Push(msg);
+      }
+  }
   // vector version
   void Add(const std::vector<Key>& keys, const std::vector<Val>& vals) {
       std::vector<std::pair<int, AbstractPartitionManager::KVPairs>> sliced;

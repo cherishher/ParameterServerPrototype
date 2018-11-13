@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
     KVClientTable<double> table = info.CreateKVClientTable<double>(kTableId);
 
-    for (int i = 0; i < 1e8; ++i) {
+    for (int i = 0; i < 1e3; ++i) {
       std::vector<Key> keys{1};
 
       std::vector<double> ret;

@@ -27,23 +27,23 @@ class AbstractDataLoader {
     // 1. Connect to the data source, e.g. HDFS, via the modules in io
     // 2. Extract and parse lines
     // 3. Put samples into datastore
-    LineInputFormat infmt(url, num_threads_, id_, &coordinator_, worker_hostname_, hdfs_namenode_, hdfs_namenode_port_);
-    boost::string_ref& ref
-    while(infmt.next(ref)){
-      Sample samples = parse(ref, n_features);
-      datastore.push_back(samples);
-    }
+    // LineInputFormat infmt(url, num_threads_, id_, &coordinator_, worker_hostname_, hdfs_namenode_, hdfs_namenode_port_);
+    // boost::string_ref& ref
+    // while(infmt.next(ref)){
+    //   Sample samples = parse(ref, n_features);
+    //   datastore.push_back(samples);
+    // }
 
 
   }
 
-  Datastore datastore;
-  int num_threads_;
-  int id_
-  Coordinator* coordinator_;
-  std::string worker_hostname_;
-  std::string hdfs_namenode_;
-  int hdfs_namenode_port_;
+  // Datastore datastore;
+  // int num_threads_;
+  // int id_
+  // Coordinator* coordinator_;
+  // std::string worker_hostname_;
+  // std::string hdfs_namenode_;
+  // int hdfs_namenode_port_;
 
 };  // class AbstractDataLoader
 
