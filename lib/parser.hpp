@@ -13,7 +13,7 @@ class Parser {
    *
    * @param line    a line read from the input file
    */
-  static Sample parse_libsvm(boost::string_ref line) {
+  static Sample parse_libsvm(boost::string_ref line, int n_features) {
     // check the LibSVM format and complete the parsing
     // hints: you may use boost::tokenizer, std::strtok_r, std::stringstream or any method you like
     // so far we tried all the tree and found std::strtok_r is fastest :)
@@ -24,18 +24,26 @@ class Parser {
     char* token = strtok_r(dataptr, "\t:", &dataptr);
 
     int i = -1;
-    int idx;
+    int key;
     float val;
-    while (token != NULL) {
+    int feature_num = 0;
+    while (feature_num < n_features) {
       if (i == 0) {
-        idx = std::atoi(token) - 1;
+        key = std::atoi(token) - 1;
+        if(key > feature_num){
+          for(int j=feature_num;j<key;j++){
+             sample.x_.push_back(std::make_pair(feature_num, 0));
+          }
+          feature_num = key;
+        }
         i = 1;
       } else if (i == 1) {
         val = std::atof(token);
-        sample.first.push_back(std::make_pair(idx, val));
+        sample.x_.push_back(std::make_pair(feature_num, val));
+        feature_num++;
         i = 0;
       } else {
-        sample.second = std::atof(token);
+        sample.y_ = std::atof(token);
         i = 0;
       }
       // Next key/value pair

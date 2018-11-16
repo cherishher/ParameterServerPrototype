@@ -9,11 +9,14 @@
 #include "io/hdfs_assigner.hpp"
 #include "io/hdfs_file_splitter.hpp"
 #include "io/line_input_format.hpp"
+#include "lib/abstract_data_loader.hpp"
+#include "lib/labeled_sample.hpp"
+#include "lib/parser.hpp"
 
 namespace csci5570 {
 
 void HDFS_Read() {
-  std::string hdfs_namenode = "proj10";
+  std::string hdfs_namenode = "localhost";
   int hdfs_namenode_port = 9000;
   int master_port = 19817;  // use a random port number to avoid collision with other users
   zmq::context_t zmq_context(1);
@@ -26,8 +29,8 @@ void HDFS_Read() {
 
   // 2. Prepare meta info for the master and workers
   int proc_id = getpid();  // the actual process id, or you can assign a virtual one, as long as it is distinct
-  std::string master_host = "proj10";  // change to the node you are actually using
-  std::string worker_host = "proj10";  // change to the node you are actually using
+  std::string master_host = "localhost";  // change to the node you are actually using
+  std::string worker_host = "localhost";  // change to the node you are actually using
 
   // 3. One coordinator for one process
   Coordinator coordinator(proc_id, worker_host, &zmq_context, master_host, master_port);
@@ -42,18 +45,35 @@ void HDFS_Read() {
     LineInputFormat infmt(input, num_threads, second_id, &coordinator, worker_host, hdfs_namenode, hdfs_namenode_port);
     LOG(INFO) << "Line input is well prepared";
 
+    lib::Parser<lib::LabeledSample<std::vector<std::pair<int, double>>, int>,
+                std::vector<lib::LabeledSample<std::vector<std::pair<int, double>>, int>>>
+        parser;
+    std::vector<lib::LabeledSample<std::vector<std::pair<int, double>>, int>> datastore;
     // Line counting demo
     // Deserialing logic in UDF/application library
     bool success = true;
     int count = 0;
     boost::string_ref record;
+
     while (true) {
+      lib::LabeledSample<std::vector<std::pair<int, double>>, int> sample;
       success = infmt.next(record);
-      if (success == false)
+      if(success == false)
         break;
-      ++count;
+      LOG(INFO) << "HELLO";
+      sample = parser.parse_libsvm(record, 123);
+      LOG(INFO) << "HERE";
+      datastore.push_back(sample);
+      LOG(INFO) << "FINISH " << sample.x_[1].second << " LABLE IS " << sample.y_;
     }
-    LOG(INFO) << "The number of lines in " << input << " is " << count;
+
+    // while (true) {
+    //   success = infmt.next(record);
+    //   if (success == false)
+    //     break;
+    //   ++count;
+    // }
+    // LOG(INFO) << "The number of lines in " << input << " is " << count;
 
     // Remember to notify master that the worker wants to exit
     BinStream finish_signal;
