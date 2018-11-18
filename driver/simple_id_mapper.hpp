@@ -61,6 +61,12 @@ class SimpleIdMapper : public AbstractIdMapper {
    * @param node_id     the node id
    */
   std::vector<uint32_t> GetServerThreadsForId(uint32_t node_id);
+
+  /**
+   * Returns heartbeat thread ids on the specified node
+   * @param node_id     the node id
+   */
+  uint32_t GetHeartBeatThreadForId(uint32_t node_id);
   /**
    * Returns the ids of background workers on the specified node
    * @param node_id     the node id
@@ -85,6 +91,7 @@ class SimpleIdMapper : public AbstractIdMapper {
   // The server thread id for node 0 is in [0, 50)
   // The worker thread id for node id 0 is in [50, 100)
   static const uint32_t kWorkerHelperThreadId = 50;
+  static const uint32_t kHeartBeatThreadId = 49;
 
  private:
   // The server thread's id in each node
