@@ -37,6 +37,8 @@ void SSPModel::Get(Message& msg) {
   if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
     Message reply = storage_->Get(msg);
+    // add round info
+  	reply.meta.round = GetProgress(msg.meta.sender);
     reply_queue_->Push(reply);
   } else {
     buffer_.Push(GetProgress(msg.meta.sender) - staleness_, msg);

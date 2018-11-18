@@ -28,6 +28,8 @@ void ASPModel::Get(Message& msg) {
   // TODO
   if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   Message message = storage_->Get(msg);
+  // add round info
+  message.meta.round = GetProgress(msg.meta.sender);
   reply_queue_->Push(message);
 }
 

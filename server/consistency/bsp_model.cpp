@@ -54,7 +54,9 @@ void BSPModel::Get(Message& msg) {
 	int tid = msg.meta.sender;
 	if(progress_tracker_.GetProgress(tid) == progress_tracker_.GetMinClock()){
 		Message reply = storage_->Get(msg);
-	  	reply_queue_->Push(reply);
+		// add round info
+  	reply.meta.round = GetProgress(msg.meta.sender);
+	  reply_queue_->Push(reply);
 	} else {
 		get_buffer_.push_back(msg);
 	}
