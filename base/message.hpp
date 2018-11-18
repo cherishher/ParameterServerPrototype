@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include <sstream>
+#include <ctime>
 
 #include "base/magic.hpp"
 #include "base/serialization.hpp"
@@ -20,6 +21,7 @@ struct Meta {
   int model_id;
   Flag flag;  // {kExit, kBarrier, kResetWorkerInModel, kClock, kAdd, kGet}
   int round; // for kGet Msg, indicate the round of iterations of the key
+  time_t timestamp;
 
   std::string DebugString() const {
     std::stringstream ss;
