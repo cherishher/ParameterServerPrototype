@@ -11,14 +11,15 @@ namespace csci5570 {
 
 struct Control {};
 
-enum class Flag : char { kExit, kBarrier, kResetWorkerInModel, kClock, kAdd, kGet };
-static const char* FlagName[] = {"kExit", "kBarrier", "kResetWorkerInModel", "kClock", "kAdd", "kGet"};
+enum class Flag : char { kExit, kBarrier, kResetWorkerInModel, kClock, kAdd, kGet, kHeartbeat };// add flag heartbeat
+static const char* FlagName[] = {"kExit", "kBarrier", "kResetWorkerInModel", "kClock", "kAdd", "kGet", "kHeartbeat"};
 
 struct Meta {
   int sender;
   int recver;
   int model_id;
   Flag flag;  // {kExit, kBarrier, kResetWorkerInModel, kClock, kAdd, kGet}
+  int round; // for kGet Msg, indicate the round of iterations of the key
 
   std::string DebugString() const {
     std::stringstream ss;
