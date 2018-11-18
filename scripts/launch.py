@@ -15,10 +15,11 @@ from os.path import dirname, join
 # 4:worker5:37542
 #
 # hostfile = "machinefiles/local"
-hostfile = "machinefiles/5node"
-progfile = "debug/BasicExample"
+hostfile = "config/host"
+progfile = "build/SimpleExample"
 
 script_path = os.path.realpath(__file__)
+print "scipt_path: ",script_path
 proj_dir = dirname(dirname(script_path))
 print "proj_dir:", proj_dir
 hostfile_path = join(proj_dir, hostfile)
@@ -44,7 +45,7 @@ env_params = (
 # TODO: May need to ls before run to make sure the related files are synced.
 clear_cmd = "ls " + hostfile_path + " > /dev/null ; ls " + prog_path + " > /dev/null; "
 
-with open(hostfile, "r") as f:
+with open(hostfile_path, "r") as f:
   hostlist = []
   hostlines = f.read().splitlines()
   for line in hostlines:
@@ -56,7 +57,7 @@ with open(hostfile, "r") as f:
     cmd = ssh_cmd + host + " "
     # cmd += clear_cmd
     cmd += env_params + " " + prog_path
-    cmd += " --my_id="+node_id
+    # cmd += " --my_id="+node_id
     cmd += "".join([" --%s=%s" % (k,v) for k,v in params.items()])
     cmd += " &"
     print cmd
