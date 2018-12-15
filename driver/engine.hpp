@@ -172,7 +172,7 @@ namespace csci5570 {
      */
     std::vector<uint32_t> GetServerThreadIds() { return id_mapper_->GetAllServerThreads(); }
     
-  private:
+  protected:
     /**
      * Register partition manager for a model to the engine
      *

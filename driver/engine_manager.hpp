@@ -7,15 +7,16 @@
 #include <mutex>
 #include <condition_variable>
 #include <deque>
+#include <vector>
+
+#include "engine.hpp"
 
 namespace csci5570 {
 
 class EngineManager : public Engine{
  public:
-
-	EngineManager(const Node& node, const std::vector<Node>& nodes, bool isPrimary = true){
-		this->node_ = node;
-		this->nodes_ = nodes;
+	EngineManager(const Node& node, const std::vector<Node>& nodes, 
+									bool isPrimary = true): Engine(node, nodes) {
 		this->isPrimary_ = isPrimary;
 	}
 
@@ -30,7 +31,7 @@ class EngineManager : public Engine{
 
     	// see if it needs to be changed !!!
 		std::vector<uint32_t> sids = id_mapper_->GetServerThreadsForId(node_.id);
-		HeartBeatServerThread_ = new ServerThread(sids.size()-1);
+		HeartBeatServerThread_.reset(new ServerThread(sids.size() - 1));
 
     	StartHeartBeat();
 	}
@@ -42,9 +43,9 @@ class EngineManager : public Engine{
 		StopHeartBeat();
 	}
 
-	StartAllEngines(){
-		for (int i = 0; i < nodes.size(); i++){
-			if (node_ != nodes_[i]){
+	void StartAllEngines(){
+		for (int i = 0; i < nodes_.size(); i++){
+			if (!(node_ == nodes_[i])) {
 	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_));
 	  			ptr->StartEverything();
       			engine_group_.push_back(std::move(ptr));
@@ -52,9 +53,9 @@ class EngineManager : public Engine{
 		}
 	}
 
-	StopAllEngines(){
-		for (int i = 0; i < nodes.size(); i++){
-			if (node_ != nodes_[i]){
+	void StopAllEngines(){
+		for (int i = 0; i < nodes_.size(); i++){
+			if (!(node_ == nodes_[i])){
       			engine_group_[i].get()->StopEverything();
   			}
 		}
@@ -63,14 +64,14 @@ class EngineManager : public Engine{
 	void HeartBeat(){
 		
 		// call get thread_id with node_id as parameter for communication
-		uint32_t from_node_thread_id = id_mapper->GetHeartBeatThreadForId(node_.id);
+		uint32_t from_node_thread_id = id_mapper_->GetHeartBeatThreadForId(node_.id);
 		time_t timestamp = time(NULL);
 
 		for(int i = 0; i < nodes_.size(); i++) {
 
-			uint32_t to_node_thread_id = id_mapper->GetHeartBeatThreadForId(nodes_[i].id);
+			uint32_t to_node_thread_id = id_mapper_->GetHeartBeatThreadForId(nodes_[i].id);
 
-			Message msg // the heartbeat message
+			Message msg; // the heartbeat message
 		    msg.meta.flag = Flag::kHeartbeat;
 		    msg.meta.sender = from_node_thread_id;
 		    msg.meta.recver = to_node_thread_id;
@@ -94,23 +95,23 @@ class EngineManager : public Engine{
 		ThreadsafeQueue<Message>* queue;
 		while(queue->Size() > 0){
 			Message msg;
-			queue->WaitAndPop(msg);
+			queue->WaitAndPop(&msg);
 
 			// check maps
-			if(heartbeat_count_.find(msg.sender) == heartbeat_count_.end()){
-				deque<time_t> deq;
-				heartbeat_count_.insert(pair<uint32_t, deque<time_t>>(msg.sender, new deque<time_t>));
+			if(heartbeat_count_.find(msg.meta.sender) == heartbeat_count_.end()){
+				std::deque<time_t> deq;
+				heartbeat_count_.insert(std::make_pair(msg.meta.sender, std::deque<time_t>()));
 			} else {
-				for (int i = 0; i < heartbeat_count_[msg.sender].size(); i++){
-					if(heartbeat_count_[msg.sender][i] < msg.timestamp){
-						heartbeat_count_.pop_front();
+				for (int i = 0; i < heartbeat_count_[msg.meta.sender].size(); i++){
+					if(heartbeat_count_[msg.meta.sender][i] < msg.meta.timestamp){
+						heartbeat_count_[msg.meta.sender].pop_front();
 					}
 				}
 			}
 			// if more than 3, restart that engine.
 		}
 
-		for(std::map<uint32_t, deque<time_t>>::iterator it = heartbeat_count_.begin(); it != heartbeat_count_.end(); ++it){
+		for(auto it = heartbeat_count_.begin(); it != heartbeat_count_.end(); ++it){
 			if(it->second.size() >= threshold){
 				// restart this engine...
 			}
@@ -127,7 +128,7 @@ class EngineManager : public Engine{
 
         heartbeat_count_.clear();
         for(int i = 0; i < nodes_.size(); i++){
-        	heartbeat_count_.insert(pair<uint32_t, deque<time_t>>(id_mapper->GetHeartBeatThreadForId(nodes_[i].id), new deque<time_t>));
+        	heartbeat_count_.insert(std::make_pair(id_mapper_->GetHeartBeatThreadForId(nodes_[i].id), std::deque<time_t>()));
         }
 
         std::thread([this, interval](){
@@ -174,7 +175,7 @@ class EngineManager : public Engine{
 	// std::unique_ptr<Sender> sender_; // inherit from engine
 	
 	bool isPrimary_ = true; // denote the primary engine manager if yes, or the secondary engine manager if false
-	map<uint32_t, deque<time_t>> heartbeat_count_; // thread_id, each engine's heartbeat message
+	std::map<uint32_t, std::deque<time_t>> heartbeat_count_; // thread_id, each engine's heartbeat message
 
 	std::unique_ptr<ServerThread> HeartBeatServerThread_;
 
