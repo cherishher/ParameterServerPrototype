@@ -1,5 +1,8 @@
 #pragma once
 
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+
 #include "base/abstract_partition_manager.hpp"
 #include "base/magic.hpp"
 #include "base/message.hpp"
@@ -9,6 +12,8 @@
 
 #include <cinttypes>
 #include <vector>
+#include <ctime>
+
 
 namespace csci5570 {
 
@@ -60,18 +65,44 @@ class KVClientTable {
           tmp2.push_back(vals[i]);
       }
       partition_manager_->Slice(std::make_pair(tmp1, tmp2), &sliced);
+      std::map<int,int> indicator_; //cash if we receive the acknownledgement or not
+      std::map<int,int> tracker_;
       for (int i = 0; i < sliced.size(); i++) {
+        indicator_[sliced[i].first] = 0;
+        tracker_[sliced[i].first] = 0;
+      }
+      time_t start_time = time(NULL);
+      bool start_round = true;
+      while (start_round || (time(NULL) - start_time > ttl_)) {
+        start_round = false;
+        start_time = time(NULL);
+        for (int i = 0; i < sliced.size(); i++) {
+          if(indicator_[sliced[i].first] == 1){
+            continue;
+          }
           Message msg;
           msg.meta.sender = app_thread_id_;
           msg.meta.recver = sliced[i].first;
           msg.meta.model_id = model_id_;
           msg.meta.flag = Flag::kAdd;
+          msg.meta.timestamp = start_time;
           third_party::SArray<Key> keys(sliced[i].second.first);
           third_party::SArray<Val> vals(sliced[i].second.second);
           msg.AddData(keys);
           msg.AddData(vals);
           sender_queue_->Push(msg);
+        }
       }
+      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [indicator_](Message& msg)mutable{
+        auto it = indicator_.find(msg.meta.sender);
+        if (it != indicator_.end())
+          it->second = 1;
+      });
+      callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, [](){
+        return;
+      });
+      callback_runner_->NewRequest(app_thread_id_, model_id_, tracker_);
+      callback_runner_->WaitRequest(app_thread_id_, model_id_);
   }
   void Get(const std::vector<Key>& keys, std::vector<Val>* vals) {
       std::vector<std::pair<int, AbstractPartitionManager::Keys>> sliced;
@@ -80,68 +111,138 @@ class KVClientTable {
           tmp.push_back(keys[i]);
       }
       partition_manager_->Slice(tmp, &sliced);
+      std::map<int,int> indicator_; //cash if we receive the acknownledgement or not
+      std::map<int,int> tracker_;
       for (int i = 0; i < sliced.size(); i++) {
+        indicator_[sliced[i].first] = 0;
+        tracker_[sliced[i].first] = 0;
+      }
+      time_t start_time = time(NULL);
+      bool start_round = true;
+      while (start_round || (time(NULL) - start_time > ttl_)) {
+        start_round = false;
+        start_time = time(NULL);
+        for (int i = 0; i < sliced.size(); i++) {
+          if(indicator_[sliced[i].first] == 1){
+            continue;
+          }
           Message msg;
           msg.meta.sender = app_thread_id_;
           msg.meta.recver = sliced[i].first;
           msg.meta.model_id = model_id_;
           msg.meta.flag = Flag::kGet;
+          msg.meta.timestamp = start_time;
           third_party::SArray<Key> keys(sliced[i].second);
           msg.AddData(keys);
           sender_queue_->Push(msg);
+        }
       }
-      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [vals](Message& msg){
-          third_party::SArray<Val> tmp(msg.data[1]);
-          for (int i = 0; i< tmp.size(); i++) {
+      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [vals, indicator_](Message& msg)mutable{
+        auto it = indicator_.find(msg.meta.sender);
+        if (it != indicator_.end()){
+          if(it->second == 0){
+            third_party::SArray<Val> tmp(msg.data[1]);
+            for (int i = 0; i< tmp.size(); i++) {
               vals->push_back(tmp[i]);
+            }
           }
+          it->second = 1;
+        }
       });
       callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, [](){
           return;
       });
-      callback_runner_->NewRequest(app_thread_id_, model_id_, sliced.size());
+      callback_runner_->NewRequest(app_thread_id_, model_id_, tracker_);
       callback_runner_->WaitRequest(app_thread_id_, model_id_);
   }
   // sarray version
   void Add(const third_party::SArray<Key>& keys, const third_party::SArray<Val>& vals) {
       std::vector<std::pair<int, AbstractPartitionManager::KVPairs>> sliced;
       partition_manager_->Slice(std::make_pair(keys, vals), &sliced);
+      std::map<int,int> indicator_; //cash if we receive the acknownledgement or not
+      std::map<int,int> tracker_;
       for (int i = 0; i < sliced.size(); i++) {
+          indicator_[sliced[i].first] = 0;
+          tracker_[sliced[i].first] = 0;
+      }
+      time_t start_time = time(NULL);
+      bool start_round = true;
+      while (start_round || (time(NULL) - start_time > ttl_)) {
+        start_round = false;
+        start_time = time(NULL);
+        for (int i = 0; i < sliced.size(); i++) {
+          if(indicator_[sliced[i].first] == 1){
+            continue;
+          }
           Message msg;
           msg.meta.sender = app_thread_id_;
           msg.meta.recver = sliced[i].first;
           msg.meta.model_id = model_id_;
           msg.meta.flag = Flag::kAdd;
+          msg.meta.timestamp = start_time;
           third_party::SArray<Key> keys(sliced[i].second.first);
           third_party::SArray<Val> vals(sliced[i].second.second);
           msg.AddData(keys);
           msg.AddData(vals);
           sender_queue_->Push(msg);
+        }
       }
+      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [indicator_](Message& msg)mutable{
+        auto it = indicator_.find(msg.meta.sender);
+        if (it != indicator_.end())
+          it->second = 1;
+      });
+      callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, [](){
+          return;
+      });
+      callback_runner_->NewRequest(app_thread_id_, model_id_, tracker_);
+      callback_runner_->WaitRequest(app_thread_id_, model_id_);
   }
   void Get(const third_party::SArray<Key>& keys, third_party::SArray<Val>* vals) {
       std::vector<std::pair<int, AbstractPartitionManager::Keys>> sliced;
       partition_manager_->Slice(keys, &sliced);
+      std::map<int,int> indicator_; //cash if we receive the acknownledgement or not
+      std::map<int,int> tracker_;
       for (int i = 0; i < sliced.size(); i++) {
+        indicator_[sliced[i].first] = 0;
+        tracker_[sliced[i].first] = 0;
+      }
+      time_t start_time = time(NULL);
+      bool start_round = true;
+      while (start_round || (time(NULL) - start_time > ttl_)) {
+        start_round = false;
+        start_time = time(NULL);
+        for (int i = 0; i < sliced.size(); i++) {
+          if(indicator_[sliced[i].first] == 1){
+            continue;
+          }
           Message msg;
           msg.meta.sender = app_thread_id_;
           msg.meta.recver = sliced[i].first;
           msg.meta.model_id = model_id_;
           msg.meta.flag = Flag::kGet;
+          msg.meta.timestamp = start_time;
           third_party::SArray<Key> keys(sliced[i].second);
           msg.AddData(keys);
           sender_queue_->Push(msg);
+        }
       }
-      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [vals](Message& msg){
-          third_party::SArray<Val> tmp(msg.data[1]);
-          for (int i = 0; i< tmp.size(); i++) {
+      callback_runner_->RegisterRecvHandle(app_thread_id_, model_id_, [vals, indicator_](Message& msg)mutable{
+        auto it = indicator_.find(msg.meta.sender);
+        if (it != indicator_.end()){
+          if(it->second == 0){
+            third_party::SArray<Val> tmp(msg.data[1]);
+            for (int i = 0; i< tmp.size(); i++) {
               vals->push_back(tmp[i]);
+            }
           }
+          it->second = 1;
+        }
       });
       callback_runner_->RegisterRecvFinishHandle(app_thread_id_, model_id_, [](){
           return;
       });
-      callback_runner_->NewRequest(app_thread_id_, model_id_, sliced.size());
+      callback_runner_->NewRequest(app_thread_id_, model_id_, tracker_);
       callback_runner_->WaitRequest(app_thread_id_, model_id_);
   }
   // ========== API ========== //
@@ -149,6 +250,8 @@ class KVClientTable {
  private:
   uint32_t app_thread_id_;  // identifies the user thread
   uint32_t model_id_;       // identifies the model on servers
+  uint32_t sequence_number_ = 0;  //sequence number for add request
+  double ttl_  = 10; //time to live
 
   ThreadsafeQueue<Message>* const sender_queue_;             // not owned
   AbstractCallbackRunner* const callback_runner_;            // not owned
