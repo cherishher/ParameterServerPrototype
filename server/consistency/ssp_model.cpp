@@ -1,5 +1,6 @@
 #include "server/consistency/ssp_model.hpp"
 #include "glog/logging.h"
+#include "gtest/gtest.h"
 
 namespace csci5570 {
 
@@ -26,7 +27,8 @@ void SSPModel::Add(Message& msg) {
   // TODO
   if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
   if (GetProgress(msg.meta.sender) - progress_tracker_.GetMinClock() <= staleness_) {
-    storage_->Add(msg);
+    Message reply = storage_->Add(msg);
+    reply_queue_->Push(reply);
   } else {
     buffer_.Push(GetProgress(msg.meta.sender) - staleness_, msg);
   }

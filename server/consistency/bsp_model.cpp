@@ -23,7 +23,8 @@ void BSPModel::Clock(Message& msg) {
 
 	  		// handle the add/get buffer
 	  		for (size_t i = 0; i < add_buffer_.size(); i++){
-	  			storage_->Add(add_buffer_[i]);
+          Message reply = storage_->Add(add_buffer_[i]);
+          reply_queue_->Push(reply);
 	  		}
 	  		add_buffer_.clear();
 
@@ -31,7 +32,7 @@ void BSPModel::Clock(Message& msg) {
 	  			Message reply = storage_->Get(get_buffer_[j]);
 	  			reply_queue_->Push(reply);
 	  		}
-	  		add_buffer_.clear();
+	  		get_buffer_.clear();
 	  	}       
   	}
 }

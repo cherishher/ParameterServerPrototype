@@ -3,6 +3,7 @@
 #include "base/message.hpp"
 
 #include "glog/logging.h"
+#include "gtest/gtest.h"
 
 namespace csci5570 {
 
@@ -11,13 +12,21 @@ namespace csci5570 {
  */
 class AbstractStorage {
  public:
-  void Add(Message& msg) {
+  Message Add(Message& msg) {
     CHECK(msg.data.size() == 2);
+    LOG(INFO) << "generate add message";
     auto typed_keys = third_party::SArray<Key>(msg.data[0]);
+    Message reply;
+    reply.meta.recver = msg.meta.sender;
+    reply.meta.sender = msg.meta.recver;
+    reply.meta.flag = msg.meta.flag;
+    reply.meta.model_id = msg.meta.model_id;
     SubAdd(typed_keys, msg.data[1]);
+    return reply;
   }
   Message Get(Message& msg) {
     CHECK(msg.data.size() == 1);
+    LOG(INFO) << "generate get message";
     auto typed_keys = third_party::SArray<Key>(msg.data[0]);
     Message reply;
     reply.meta.recver = msg.meta.sender;
