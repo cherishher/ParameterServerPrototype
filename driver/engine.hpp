@@ -33,7 +33,12 @@ namespace csci5570 {
      * @param nodes    all nodes in the cluster
      */
     Engine(const Node& node, const std::vector<Node>& nodes) : node_(node), nodes_(nodes) {};
-    Engine(const Node& node, const std::vector<Node>& nodes, const std::string hdfs_addr) : node_(node), nodes_(nodes), hdfs_addr_(hdfs_addr){};
+    //Engine(const Node& node, const std::vector<Node>& nodes, const std::string hdfs_addr) : node_(node), nodes_(nodes), hdfs_addr_(hdfs_addr){};
+    Engine(const Node& node, const std::vector<Node>& nodes, const std::string hdfs_addr, bool is_recover = false) : node_(node), nodes_(nodes), hdfs_addr_(hdfs_addr){
+      if(is_recover){
+        // revovery logic
+      }
+    };
     /**
      * The flow of starting the engine:
      * 1. Create an id_mapper and a mailbox
