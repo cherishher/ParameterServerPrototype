@@ -47,7 +47,7 @@ class EngineManager : public Engine{
 		for (int i = 0; i < nodes_.size(); i++){
 			if (!(node_ == nodes_[i])) {
 				uint32_t to_node_thread_id = id_mapper_->GetHeartBeatThreadForId(nodes_[i].id);
-	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_, "hdfs:///csci5570@group6/recovery/"+to_node_thread_id)); // append hdfs_address
+	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_, std::string("hdfs:///csci5570@group6/recovery/"+to_node_thread_id))); // append hdfs_address
 	  			ptr->StartEverything();
       			engine_group_.push_back(std::move(ptr));
   			}
@@ -116,13 +116,22 @@ class EngineManager : public Engine{
 				// Get recovery data address
 				std::string hdfs_address = "hdfs:///csci5570@group6/recovery/" + it->first; // using thread_id as its recovery address
 				// restart this engine
-				RestartEngine(it->first);
+				RestartEngine(hdfs_address, it->first);
 			}
 		}
 	}
 
-	bool RestartEngine(uint32_t engine_thread_id){
+	bool RestartEngine(std::string hdfs_address, uint32_t engine_thread_id){
+		StopHeartBeat();
+		
 		// system call
+		std::string cmd = "python ";
+		cmd += "../scripts/launch.py ";//  need to write a new script
+		cmd += hdfs_addr_ + " 1";// 1 -> recovery, 0 -> not recovery
+		system(cmd.c_str());
+
+		sleep(30);
+		StartHeartBeat();
 	}
 
 	// timer in seconds
