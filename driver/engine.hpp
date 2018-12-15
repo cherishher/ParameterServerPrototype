@@ -32,7 +32,8 @@ namespace csci5570 {
      * @param node     the current node
      * @param nodes    all nodes in the cluster
      */
-    Engine(const Node& node, const std::vector<Node>& nodes) : node_(node), nodes_(nodes) {}
+    Engine(const Node& node, const std::vector<Node>& nodes) : node_(node), nodes_(nodes) {};
+    Engine(const Node& node, const std::vector<Node>& nodes, const std::string hdfs_addr) : node_(node), nodes_(nodes), hdfs_addr_(hdfs_addr){};
     /**
      * The flow of starting the engine:
      * 1. Create an id_mapper and a mailbox
@@ -195,6 +196,8 @@ namespace csci5570 {
     // server elements
     std::vector<std::unique_ptr<ServerThread>> server_thread_group_;
     size_t model_count_ = 0;
+
+    std::string hdfs_addr_;
   };
   
 }  // namespace csci5570

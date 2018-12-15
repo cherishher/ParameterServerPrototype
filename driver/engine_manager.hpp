@@ -21,7 +21,6 @@ class EngineManager : public Engine{
 	}
 
 	void StartEM(){
-		StartAllEngines();
 		id_mapper_.reset(new SimpleIdMapper(node_, nodes_));
     	id_mapper_->Init(1); // num_server_threads_per_node = 1
     	mailbox_.reset(new Mailbox(node_, nodes_, id_mapper_.get()));
@@ -33,6 +32,7 @@ class EngineManager : public Engine{
 		std::vector<uint32_t> sids = id_mapper_->GetServerThreadsForId(node_.id);
 		HeartBeatServerThread_.reset(new ServerThread(sids.size() - 1));
 
+		StartAllEngines();
     	StartHeartBeat();
 	}
 
@@ -46,7 +46,8 @@ class EngineManager : public Engine{
 	void StartAllEngines(){
 		for (int i = 0; i < nodes_.size(); i++){
 			if (!(node_ == nodes_[i])) {
-	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_));
+				uint32_t to_node_thread_id = id_mapper_->GetHeartBeatThreadForId(nodes_[i].id);
+	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_, "hdfs:///csci5570@group6/recovery/"+to_node_thread_id)); // append hdfs_address
 	  			ptr->StartEverything();
       			engine_group_.push_back(std::move(ptr));
   			}
@@ -108,14 +109,20 @@ class EngineManager : public Engine{
 					}
 				}
 			}
-			// if more than 3, restart that engine.
 		}
 
 		for(auto it = heartbeat_count_.begin(); it != heartbeat_count_.end(); ++it){
 			if(it->second.size() >= threshold){
-				// restart this engine...
+				// Get recovery data address
+				std::string hdfs_address = "hdfs:///csci5570@group6/recovery/" + it->first; // using thread_id as its recovery address
+				// restart this engine
+				RestartEngine(it->first);
 			}
 		}
+	}
+
+	bool RestartEngine(uint32_t engine_thread_id){
+		// system call
 	}
 
 	// timer in seconds
