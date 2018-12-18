@@ -12,6 +12,8 @@
 #include "lib/labeled_sample.hpp"
 #include "lib/parser.hpp"
 
+#include "driver/engine_manager.hpp"
+
 using namespace csci5570;
 
 using Sample = double;
@@ -67,5 +69,9 @@ int main(int argc, char** argv) {
 
   // 3. Stop
   engine.StopEverything();
+
+
+  EngineManager em(node, {node});
+  std::cout << "test\n";
   return 0;
 }

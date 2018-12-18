@@ -24,9 +24,9 @@ void ASPModel::Clock(Message& msg) {
 
 void ASPModel::Add(Message& msg) {
   // TODO
-  if (!progress_tracker_.CheckThreadValid(msg.meta.sender))
-    return;
-  storage_->Add(msg);
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
+  Message message = storage_->Add(msg);
+  reply_queue_->Push(message);
 }
 
 void ASPModel::Get(Message& msg) {

@@ -2,6 +2,9 @@
 
 #include <functional>
 
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+
 #include "base/message.hpp"
 
 namespace csci5570 {
@@ -22,7 +25,7 @@ class AbstractCallbackRunner {
   /**
    * Register a new request which expects to receive <expected_responses> responses
    */
-  virtual void NewRequest(uint32_t app_thread_id, uint32_t model_id, uint32_t expected_responses) = 0;
+  virtual void NewRequest(uint32_t app_thread_id, uint32_t model_id, std::map<int,int> indicator) = 0;
 
   /**
    * Return when the request is completed
@@ -46,32 +49,47 @@ class DefaultCallbackRunner: public AbstractCallbackRunner {
                                         const std::function<void()>& recv_finish_handle) {
       recv_finish_handle_map_[app_thread_id][model_id] = recv_finish_handle;
     }
-    void NewRequest(uint32_t app_thread_id, uint32_t model_id, uint32_t expected_responses) {
-      trackers_[app_thread_id][model_id] = {expected_responses, 0};
+    void NewRequest(uint32_t app_thread_id, uint32_t model_id, std::map<int,int> indicator) {
+      trackers_[app_thread_id][model_id] = indicator;
     }
     void WaitRequest(uint32_t app_thread_id, uint32_t model_id) {
       std::unique_lock<std::mutex> lk(mu_);
       cond_.wait(lk, [this, app_thread_id, model_id] {
         auto &tracker = trackers_[app_thread_id][model_id];
-          return tracker.first == tracker.second;
-        });
+        std::map<int, int>::iterator it;
+        for (it = tracker.begin(); it != tracker.end(); it++)
+        {
+          if(it->second == 0){
+            return false;
+          }
+        }
+        return true;
+      });
     }
     void AddResponse(uint32_t app_thread_id, uint32_t model_id, Message& msg) {
-      bool recv_finish = false;
+      bool recv_finish = true;
       auto &tracker = trackers_[app_thread_id][model_id];
+      recv_handle_map_[app_thread_id][model_id](msg);
+      
       {
         std::lock_guard<std::mutex> lk(mu_);
-        recv_finish = tracker.first == tracker.second + 1 ? true : false;
+        auto it1 = tracker.find(msg.meta.sender);
+        if (it1 != tracker.end())
+          it1->second = 1;
+        std::map<int, int>::iterator it;
+        for (it = tracker.begin(); it != tracker.end(); it++)
+        {
+          if(it->second == 0){
+            recv_finish = false;
+          }
+        }
       }
-
-      recv_handle_map_[app_thread_id][model_id](msg);
 
       if (recv_finish) {
         recv_finish_handle_map_[app_thread_id][model_id]();
       }
       {
         std::lock_guard<std::mutex> lk(mu_);
-        tracker.second += 1;
         if (recv_finish) {
           cond_.notify_all();
         }
@@ -80,7 +98,7 @@ class DefaultCallbackRunner: public AbstractCallbackRunner {
   private:
     std::map<uint32_t, std::map<uint32_t, std::function<void(Message&)>>> recv_handle_map_;
     std::map<uint32_t, std::map<uint32_t, std::function<void()>>> recv_finish_handle_map_;
-    std::map<uint32_t, std::map<uint32_t, std::pair<int, int>>> trackers_;
+    std::map<uint32_t, std::map<uint32_t, std::map<int,int>>> trackers_;
 
     std::mutex mu_;
     std::condition_variable cond_;
