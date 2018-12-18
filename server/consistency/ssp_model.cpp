@@ -67,4 +67,8 @@ void SSPModel::ResetWorker(Message& msg) {
   reply_queue_->Push(relpy);
 }
 
+void SSPModel::Backup() {
+  storage_->Backup(model_id_);
+}
+
 }  // namespace csci5570

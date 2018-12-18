@@ -30,13 +30,14 @@ class AbstractStorage {
     reply.AddData<char>(reply_vals);
     return reply;
   }
-  
+
   // Add the typed_keys and typed_vals to kvstore
-  virtual void SubAdd(const third_party::SArray<Key>& typed_keys, 
-      const third_party::SArray<char>& vals) = 0;
+  virtual void SubAdd(const third_party::SArray<Key>& typed_keys, const third_party::SArray<char>& vals) = 0;
 
   // Retrieve the vals according to the typed_keys
   virtual third_party::SArray<char> SubGet(const third_party::SArray<Key>& typed_keys) = 0;
+
+  virtual void Backup(int model_id) = 0;
 
   virtual void FinishIter() = 0;
 };

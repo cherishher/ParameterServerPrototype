@@ -28,6 +28,7 @@ TEST_F(TestASPModel, CheckConstructor) {
   // TODO the test should be independent of the storage implementation
   std::unique_ptr<AbstractStorage> storage(new MapStorage<int>());
   ASPModel model(model_id, std::move(storage), &reply_queue);
+  model.Backup();
 }
 
 TEST_F(TestASPModel, CheckGetAndAdd) {

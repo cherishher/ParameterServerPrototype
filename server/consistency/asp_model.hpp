@@ -24,6 +24,7 @@ class ASPModel : public AbstractModel {
   virtual void Get(Message& msg) override;
   virtual int GetProgress(int tid) override;
   virtual void ResetWorker(Message& msg) override;
+  virtual void Backup() override;
 
  private:
   uint32_t model_id_;

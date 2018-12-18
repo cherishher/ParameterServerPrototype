@@ -94,4 +94,8 @@ void BSPModel::ResetWorker(Message& msg) {
   reply_queue_->Push(message);
 }
 
+void BSPModel::Backup() {
+  storage_->Backup(model_id_);
+}
+
 }  // namespace csci5570

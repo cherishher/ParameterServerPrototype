@@ -43,6 +43,8 @@ class ProgressTracker {
    */
   bool CheckThreadValid(int tid) const;
 
+  void Backup(int model_id) const;
+
  private:
   std::map<int, int> progresses_;  // {tid: progress}
   int min_clock_;                  // the slowest progress

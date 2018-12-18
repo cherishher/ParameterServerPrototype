@@ -13,6 +13,7 @@ class AbstractModel {
   virtual void Get(Message& msg) = 0;
   virtual int GetProgress(int tid) = 0;
   virtual void ResetWorker(Message& msg) = 0;
+  virtual void Backup() = 0;
   virtual ~AbstractModel() {}
 };
 

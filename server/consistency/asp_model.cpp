@@ -13,20 +13,26 @@ ASPModel::ASPModel(uint32_t model_id, std::unique_ptr<AbstractStorage>&& storage
 
 void ASPModel::Clock(Message& msg) {
   // TODO
-  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender))
+    return;
   int tid = msg.meta.sender;
   progress_tracker_.AdvanceAndGetChangedMinClock(tid);
+  if (progress_tracker_.GetMinClock() % 50 == 0){
+    this->Backup();
+  }
 }
 
 void ASPModel::Add(Message& msg) {
   // TODO
-  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender))
+    return;
   storage_->Add(msg);
 }
 
 void ASPModel::Get(Message& msg) {
   // TODO
-  if (!progress_tracker_.CheckThreadValid(msg.meta.sender)) return;
+  if (!progress_tracker_.CheckThreadValid(msg.meta.sender))
+    return;
   Message message = storage_->Get(msg);
   // add round info
   message.meta.round = GetProgress(msg.meta.sender);
@@ -52,6 +58,11 @@ void ASPModel::ResetWorker(Message& msg) {
   message.meta.sender = msg.meta.recver;
   message.meta.flag = Flag::kResetWorkerInModel;
   reply_queue_->Push(message);
+}
+
+void ASPModel::Backup() {
+  storage_->Backup(model_id_);
+  progress_tracker_.Backup(model_id_);
 }
 
 }  // namespace csci5570

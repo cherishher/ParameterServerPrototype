@@ -24,6 +24,7 @@ class SSPModel : public AbstractModel {
   virtual void Get(Message& msg) override;
   virtual int GetProgress(int tid) override;
   virtual void ResetWorker(Message& msg) override;
+  virtual void Backup() override;
 
   /**
    * Return the number of requests waiting at the specific progress
