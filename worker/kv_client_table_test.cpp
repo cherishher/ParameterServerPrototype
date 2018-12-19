@@ -45,6 +45,11 @@ class FakePartitionManager : public AbstractPartitionManager {
     sliced->at(1).second.second = kvs.second.segment(pos, n);
   }
 
+  std::vector<third_party::Range> GetRanges() {
+    std::vector<third_party::Range> ranges(1);
+    return ranges;
+  }
+
  private:
   int split_ = 0;
 };
@@ -118,7 +123,7 @@ TEST_F(TestKVClientTable, Init) {
   ThreadsafeQueue<Message> queue;
   FakePartitionManager manager({0, 1}, 4);
 
-  //FakeCallbackRunner callback_runner;
+  // FakeCallbackRunner callback_runner;
   DefaultCallbackRunner callback_runner;
 
   KVClientTable<double> table(kTestAppThreadId, kTestModelId, &queue, &manager, &callback_runner);
@@ -127,17 +132,17 @@ TEST_F(TestKVClientTable, Init) {
 TEST_F(TestKVClientTable, Add) {
   ThreadsafeQueue<Message> queue;
   FakePartitionManager manager({0, 1}, 4);
-  
-  //FakeCallbackRunner callback_runner;
+
+  // FakeCallbackRunner callback_runner;
   DefaultCallbackRunner callback_runner;
 
   KVClientTable<double> table(kTestAppThreadId, kTestModelId, &queue, &manager, &callback_runner);
 
   std::vector<Key> keys = {3, 4, 5, 6};
   std::vector<double> vals = {0.1, 0.1, 0.1, 0.1};
-  //third_party::SArray<Key> keys = {3, 4, 5, 6};
-  //third_party::SArray<double> vals = {0.1, 0.1, 0.1, 0.1};
-  
+  // third_party::SArray<Key> keys = {3, 4, 5, 6};
+  // third_party::SArray<double> vals = {0.1, 0.1, 0.1, 0.1};
+
   table.Add(keys, vals);  // {3,4,5,6} -> {3}, {4,5,6}
   Message m1, m2;
   queue.WaitAndPop(&m1);
@@ -177,8 +182,8 @@ TEST_F(TestKVClientTable, Add) {
 TEST_F(TestKVClientTable, Get) {
   ThreadsafeQueue<Message> queue;
   FakePartitionManager manager({0, 1}, 4);
-  
-  //FakeCallbackRunner callback_runner;
+
+  // FakeCallbackRunner callback_runner;
   DefaultCallbackRunner callback_runner;
 
   std::thread th([&queue, &manager, &callback_runner]() {

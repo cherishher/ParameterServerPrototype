@@ -106,6 +106,10 @@ class RangePartitionManager : public AbstractPartitionManager {
   	}
   }
 
+  std::vector<third_party::Range> GetRanges(){
+	  return ranges_;
+  }
+
  private:
   std::vector<third_party::Range> ranges_;
   // std::map<uint32_t, <third_party::Range>> rangesMap;
