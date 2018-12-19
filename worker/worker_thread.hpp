@@ -49,8 +49,13 @@ class WorkerHelperThread : public AbstractWorkerThread {
       }
       switch (m.meta.flag) {
         case Flag::kGet:
+          //LOG(INFO) << "worker get message";
           this->OnReceive(m);
-          break;   
+          break;
+        case Flag::kAdd:
+          //LOG(INFO) << "worker add message";
+          this->OnReceive(m);
+          break;
       }
     }
   }

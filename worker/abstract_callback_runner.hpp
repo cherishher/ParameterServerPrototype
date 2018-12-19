@@ -8,53 +8,56 @@
 #include "base/message.hpp"
 
 namespace csci5570 {
-
-class AbstractCallbackRunner {
- public:
-  /**
-   * Register callbacks for receiving a message
-   */
-  virtual void RegisterRecvHandle(uint32_t app_thread_id, uint32_t model_id,
-                                  const std::function<void(Message&)>& recv_handle) = 0;
-  /**
-   * Register callbacks for when all expected responses are received
-   */
-  virtual void RegisterRecvFinishHandle(uint32_t app_thread_id, uint32_t model_id,
-                                        const std::function<void()>& recv_finish_handle) = 0;
-
-  /**
-   * Register a new request which expects to receive <expected_responses> responses
-   */
-  virtual void NewRequest(uint32_t app_thread_id, uint32_t model_id, std::map<int,int> indicator) = 0;
-
-  /**
-   * Return when the request is completed
-   */
-  virtual void WaitRequest(uint32_t app_thread_id, uint32_t model_id) = 0;
-
-  /**
-   * Used by the worker threads on receival of messages and to invoke callbacks
-   */
-  virtual void AddResponse(uint32_t app_thread_id, uint32_t model_id, Message& msg) = 0;
-};  // class AbstractCallbackRunner
-
-class DefaultCallbackRunner: public AbstractCallbackRunner {
+  
+  class AbstractCallbackRunner {
+  public:
+    /**
+     * Register callbacks for receiving a message
+     */
+    virtual void RegisterRecvHandle(uint32_t app_thread_id, uint32_t model_id,
+                                    const std::function<void(Message&)>& recv_handle) = 0;
+    /**
+     * Register callbacks for when all expected responses are received
+     */
+    virtual void RegisterRecvFinishHandle(uint32_t app_thread_id, uint32_t model_id,
+                                          const std::function<void()>& recv_finish_handle) = 0;
+    
+    /**
+     * Register a new request which expects to receive <expected_responses> responses
+     */
+    virtual void NewRequest(uint32_t app_thread_id, uint32_t model_id, std::map<int,int> indicator) = 0;
+    
+    /**
+     * Return when the request is completed
+     */
+    virtual void WaitRequest(uint32_t app_thread_id, uint32_t model_id,
+                                        const std::function<void()>& time_out_send) = 0;
+    
+    /**
+     * Used by the worker threads on receival of messages and to invoke callbacks
+     */
+    virtual void AddResponse(uint32_t app_thread_id, uint32_t model_id, Message& msg) = 0;
+  };  // class AbstractCallbackRunner
+  
+  class DefaultCallbackRunner: public AbstractCallbackRunner {
   public:
     DefaultCallbackRunner() {}
     void RegisterRecvHandle(uint32_t app_thread_id, uint32_t model_id,
-                                  const std::function<void(Message&)>& recv_handle) {
+                            const std::function<void(Message&)>& recv_handle) {
       recv_handle_map_[app_thread_id][model_id] = recv_handle;
     }
     void RegisterRecvFinishHandle(uint32_t app_thread_id, uint32_t model_id,
-                                        const std::function<void()>& recv_finish_handle) {
+                                  const std::function<void()>& recv_finish_handle) {
       recv_finish_handle_map_[app_thread_id][model_id] = recv_finish_handle;
     }
     void NewRequest(uint32_t app_thread_id, uint32_t model_id, std::map<int,int> indicator) {
       trackers_[app_thread_id][model_id] = indicator;
     }
-    void WaitRequest(uint32_t app_thread_id, uint32_t model_id) {
+    void WaitRequest(uint32_t app_thread_id, uint32_t model_id,
+                                const std::function<void()>& time_out_send) {
       std::unique_lock<std::mutex> lk(mu_);
-      cond_.wait(lk, [this, app_thread_id, model_id] {
+      cond_.wait(lk, [this, app_thread_id, model_id, time_out_send] {
+        time_out_send();
         auto &tracker = trackers_[app_thread_id][model_id];
         std::map<int, int>::iterator it;
         for (it = tracker.begin(); it != tracker.end(); it++)
@@ -84,7 +87,7 @@ class DefaultCallbackRunner: public AbstractCallbackRunner {
           }
         }
       }
-
+      
       if (recv_finish) {
         recv_finish_handle_map_[app_thread_id][model_id]();
       }
@@ -99,8 +102,8 @@ class DefaultCallbackRunner: public AbstractCallbackRunner {
     std::map<uint32_t, std::map<uint32_t, std::function<void(Message&)>>> recv_handle_map_;
     std::map<uint32_t, std::map<uint32_t, std::function<void()>>> recv_finish_handle_map_;
     std::map<uint32_t, std::map<uint32_t, std::map<int,int>>> trackers_;
-
+    
     std::mutex mu_;
     std::condition_variable cond_;
-};
+  };
 }  // namespace csci5570

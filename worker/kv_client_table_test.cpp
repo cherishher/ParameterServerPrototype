@@ -70,7 +70,7 @@ class FakeCallbackRunner : public AbstractCallbackRunner {
     EXPECT_EQ(model_id, kTestModelId);
     tracker_ = {expected_responses, 0};
   }
-  void WaitRequest(uint32_t app_thread_id, uint32_t model_id) override {
+  void WaitRequest(uint32_t app_thread_id, uint32_t model_id) {
     EXPECT_EQ(app_thread_id, kTestAppThreadId);
     EXPECT_EQ(model_id, kTestModelId);
     std::unique_lock<std::mutex> lk(mu_);
