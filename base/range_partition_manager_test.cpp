@@ -68,6 +68,7 @@ class MyFakeModel : public AbstractModel {
   virtual int GetProgress(int tid) override { return -1; }
   virtual void ResetWorker(Message& msg) override {}
   virtual void Backup() override {}
+  virtual void Recovery() override {}
 
  private:
   std::unique_ptr<AbstractStorage> storage_;

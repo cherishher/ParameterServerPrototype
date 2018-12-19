@@ -43,7 +43,9 @@ class ProgressTracker {
    */
   bool CheckThreadValid(int tid) const;
 
-  void Backup(int model_id) const;
+  void Backup(int model_id);
+
+  void Recovery(int model_id);
 
  private:
   std::map<int, int> progresses_;  // {tid: progress}

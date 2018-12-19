@@ -65,4 +65,9 @@ void ASPModel::Backup() {
   progress_tracker_.Backup(model_id_);
 }
 
+void ASPModel::Recovery() {
+  storage_->Recovery(model_id_);
+  progress_tracker_.Recovery(model_id_);
+}
+
 }  // namespace csci5570

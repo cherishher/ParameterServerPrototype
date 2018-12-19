@@ -26,6 +26,7 @@ class FakeModel : public AbstractModel {
   virtual int GetProgress(int tid) override { return -1; }
   virtual void ResetWorker(Message& msg) override {}
   virtual void Backup() {}
+  virtual void Recovery() {}
 
   int clock_count_ = 0;
   int add_count_ = 0;

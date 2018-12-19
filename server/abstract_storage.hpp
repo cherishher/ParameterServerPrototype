@@ -48,6 +48,8 @@ class AbstractStorage {
 
   virtual void Backup(int model_id) = 0;
 
+  virtual void Recovery(int model_id) = 0;
+
   virtual void FinishIter() = 0;
 };
 

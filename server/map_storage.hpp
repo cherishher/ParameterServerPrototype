@@ -1,10 +1,10 @@
 #pragma once
 
-#include "base/message.hpp"
-#include "server/abstract_storage.hpp"
-#include "hdfs/hdfs.h"
 #include <fstream>
-#include<string>
+#include <string>
+#include "base/message.hpp"
+#include "hdfs/hdfs.h"
+#include "server/abstract_storage.hpp"
 
 #include "glog/logging.h"
 
@@ -38,9 +38,10 @@ class MapStorage : public AbstractStorage {
     return third_party::SArray<char>(reply_vals);
   }
 
-  virtual void Backup(int model_id) {
-    std::ofstream outfile("/data/model.dat");
-    outfile << model_id << "\n";
+  virtual void Backup(int model_id) override {
+    std::ofstream outfile;
+    std::string path = "/data/model" + std::to_string(model_id) + ".txt";
+    outfile.open(path);
     for (auto iter = storage_.begin(); iter != storage_.end(); ++iter) {
       std::ostringstream ss;
       ss << iter->second;
@@ -48,6 +49,30 @@ class MapStorage : public AbstractStorage {
       outfile << iter->first << " " << value << "\n";
     }
     outfile.close();
+  }
+
+  virtual void Recovery(int model_id) override {
+    std::ifstream ifs;
+    std::string path = "/data/model" + std::to_string(model_id) + ".txt";
+    ifs.open(path, std::ifstream::in);
+    std::string s;
+    Key key;
+    Val value;
+    int count = 0;
+    while (ifs >> s) {
+      if (count % 2 == 0)
+        key = std::stoi(s);
+      else {
+        value = std::stof(s);
+        storage_[key] = value;
+      }
+      count++;
+    }
+
+    // for (auto iter = storage_.begin(); iter != storage_.end(); iter++) {
+    //   std::cout << "key:" << iter->first << " value:" << iter->second << std::endl;
+    // }
+    ifs.close();
   }
 
   // virtual void Backup(int model_id) {

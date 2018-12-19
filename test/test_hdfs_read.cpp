@@ -60,11 +60,8 @@ void HDFS_Read() {
       success = infmt.next(record);
       if(success == false)
         break;
-      LOG(INFO) << "HELLO";
       sample = parser.parse_libsvm(record, 123);
-      LOG(INFO) << "HERE";
       datastore.push_back(sample);
-      LOG(INFO) << "FINISH " << sample.x_[1].second << " LABLE IS " << sample.y_;
     }
 
     // while (true) {

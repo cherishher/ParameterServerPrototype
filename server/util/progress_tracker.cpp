@@ -55,16 +55,37 @@ bool ProgressTracker::CheckThreadValid(int tid) const {
   return progresses_.find(tid) != progresses_.end();
 }
 
-void ProgressTracker::Backup(int model_id) const {
-  std::ofstream outfile("/data/tracker.dat");
-  outfile << model_id << " " << min_clock_ << "\n";
+void ProgressTracker::Backup(int model_id) {
+  std::ofstream outfile;
+  std::string path = "/data/model" + std::to_string(model_id) + ".txt";
+  outfile.open(path);
+  outfile << min_clock_ << "\n";
+  for (auto iter = progresses_.begin(); iter != progresses_.end(); ++iter) {
+    outfile << iter->first << " " << iter->second << "\n";
+  }
   outfile.close();
 }
 
-// void ProgressTracker::Backup(int model_id) const {
-//   std::ofstream outfile("/data/tracker.dat");
-//   outfile << model_id << " " << min_clock_ << "\n";
-//   outfile.close();
-// }
+void ProgressTracker::Recovery(int model_id) {
+  std::ifstream ifs;
+  std::string path = "/data/model" + std::to_string(model_id) + ".txt";
+  ifs.open(path, std::ifstream::in);
+  std::string s;
+  ifs >> s;
+  min_clock_ = std::stoi(s);
+  int count = 0;
+  int tid;
+  int clock;
+  while (ifs >> s) {
+    if (count % 2 == 0) {
+      tid = std::stoi(s);
+    } else {
+      clock = std::stoi(s);
+      progresses_[tid] = clock;
+    }
+    count++;
+  }
+  ifs.close();
+}
 
 }  // namespace csci5570

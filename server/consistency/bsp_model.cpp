@@ -97,6 +97,13 @@ void BSPModel::ResetWorker(Message& msg) {
 
 void BSPModel::Backup() {
   storage_->Backup(model_id_);
+  progress_tracker_.Backup(model_id_);
 }
+
+void BSPModel::Recovery() {
+  storage_->Recovery(model_id_);
+  progress_tracker_.Recovery(model_id_);
+}
+
 
 }  // namespace csci5570

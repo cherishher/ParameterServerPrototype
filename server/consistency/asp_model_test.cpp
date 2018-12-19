@@ -26,9 +26,22 @@ TEST_F(TestASPModel, CheckConstructor) {
   ThreadsafeQueue<Message> reply_queue;
   int model_id = 0;
   // TODO the test should be independent of the storage implementation
-  std::unique_ptr<AbstractStorage> storage(new MapStorage<int>());
-  ASPModel model(model_id, std::move(storage), &reply_queue);
-  model.Backup();
+  std::unique_ptr<AbstractStorage> storage(new MapStorage<double>());
+
+  // Message msg;
+  // // Get_2_0
+  // msg.meta.flag = Flag::kAdd;
+  // msg.meta.model_id = 0;
+  // msg.meta.sender = 2;
+  // msg.meta.recver = 0;
+  // msg.AddData(third_party::SArray<int>{1,2});  // key
+  // msg.AddData(third_party::SArray<double>{5.5,2.3});  // value
+
+  // ASPModel model(model_id, std::move(storage), &reply_queue);
+
+  // model.Add(msg);
+
+  // model.Backup();
 }
 
 TEST_F(TestASPModel, CheckGetAndAdd) {
@@ -177,6 +190,7 @@ TEST_F(TestASPModel, CheckGetAndAdd) {
   ASSERT_EQ(rep_vals.size(), 1);
   EXPECT_EQ(rep_keys[0], 0);
   EXPECT_EQ(rep_vals[0], 1);
+
 }
 
 }  // namespace
