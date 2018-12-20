@@ -12,6 +12,8 @@
 #include "lib/labeled_sample.hpp"
 #include "lib/parser.hpp"
 
+#include "driver/engine_manager.hpp"
+
 using namespace csci5570;
 
 using Sample = double;
@@ -19,6 +21,64 @@ using DataStore = std::vector<Sample>;
 
 DEFINE_string(config_file, "", "The config file path");
 DEFINE_string(input, "", "The hdfs input url");
+
+double alpha = 0.1;
+double lambda = 0.1;
+
+
+double mul(std::vector<int> &pt, std::vector<double> &theta) {
+  double sum = 0;
+  for (int i = 0; i < pt.size(); ++i) {
+    sum += pt[i] * theta[i];
+  }
+  return sum;
+}
+
+// assume the matrix A is m*n where m>>n (tall and skinny)
+// it's reasonable to assume that, for example a Netflix movie
+// system, may include a lot of users but less than 1k movies
+
+// overall algorithm:
+// 1. compute A'A (A transpose * A)
+// 2. compute top K singular values of A'A on a single machine
+// 3. compute U = AVsigma-1
+
+// 1. compute A'A
+// input: a row of A
+void ATA(std::vector<double> &row, int row_id){
+  map<vector<int>,double> products;
+  vector<int> key;
+  for(int i = 0; i < row.size(); i++){
+    for(int j = i; j < row.size(); j++)
+      if (row[i] != 0 && row[j] != 0){
+        double value = row[i] * row[j];
+        // emit (key:<i,j>, value: row[i]*row[j])
+        // also emit (key<j,i>) as well
+        key.clear();
+        key.push_back(i);
+        key.push_back(j);
+        products.insert(key,value);
+        key.clear();
+        key.push_back(j);
+        key.push_back(i);
+        products.insert(key,value);
+      }
+  }
+}
+
+void aggregate(){
+  
+}
+
+// 2. compute top K singular values of A'A on a single machine
+void topK(std::vector<vector<double>> &matrix){
+  // this can be done in a single machine
+  // then just call the lib is OK
+}
+
+void computeU(){
+
+}
 
 int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -29,20 +89,8 @@ int main(int argc, char** argv) {
   LOG(INFO) << FLAGS_config_file;
   
   Node node{0, "localhost", 12353};
-<<<<<<< HEAD
   Engine engine(node, {node});
   
-=======
-
-  const char* is_recover = argv[argc];
-  bool recover_tag = false;
-  if(is_recover == "1"){
-    recover_tag = true;
-  }
-
-  Engine engine(node, {node}, "", recover_tag);
-
->>>>>>> 9bfbd12adef81ed455c95199cf3cb07a98eb01f4
   // 1. Start system
   engine.StartEverything();
   
@@ -61,7 +109,7 @@ int main(int argc, char** argv) {
     
     KVClientTable<double> table = info.CreateKVClientTable<double>(kTableId);
     
-    for (int i = 0; i < 1e8; ++i) {
+    for (int i = 0; i < 1e3; ++i) {
       std::vector<Key> keys{1};
       
       std::vector<double> ret;
@@ -79,5 +127,9 @@ int main(int argc, char** argv) {
   
   // 3. Stop
   engine.StopEverything();
+  
+  
+  EngineManager em(node, {node});
+  std::cout << "test\n";
   return 0;
 }
