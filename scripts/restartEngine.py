@@ -19,7 +19,7 @@ import sys
 hostfile = "config/host"
 
 # is_recover = int(sys.argv[0]) # 1 -> recovery, 0 -> not recovery
-is_recover = sys.argv[0] # 1 -> recovery, 0 -> not recovery
+is_recovery = sys.argv[1] # 1 -> recovery, 0 -> not recovery
 
 progfile = "build/SimpleExample"
 
@@ -33,7 +33,7 @@ print "hostfile_path:%s, prog_path:%s" % (hostfile_path, prog_path)
 
 params = {
     "config_file":hostfile_path,
-    "is_recover":is_recover
+    "is_recovery":is_recovery
 }
 
 ssh_cmd = (
@@ -64,7 +64,7 @@ with open(hostfile_path, "r") as f:
     # cmd += clear_cmd
     cmd += env_params + " " + prog_path
     # cmd += " --my_id="+node_id
-    cmd += "".join([" --%s=%s" % (k,v) for k,v in params.items()])
+    cmd += "".join([" %s " % v for k,v in params.items()])
     cmd += " &"
     print cmd
     os.system(cmd)

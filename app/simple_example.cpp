@@ -24,7 +24,11 @@ DEFINE_string(config_file, "", "The config file path");
 DEFINE_string(input, "", "The hdfs input url");
 
 int main(int argc, char** argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  std::cout << "from sample app, argc: " << argc << std::endl;
+  for (int i = 0; i < argc; i++) {
+    std::cout << argv[i] << std::endl;
+  }
+  // gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   FLAGS_stderrthreshold = 0;
   FLAGS_colorlogtostderr = true;
@@ -33,9 +37,9 @@ int main(int argc, char** argv) {
 
   Node node{0, "localhost", 12353};
 
-  const char* is_recover = argv[argc];
+  const char* is_recovery = argv[argc - 1];
   bool recovery = false;
-  if(is_recover == "1"){
+  if (is_recovery == "1") {
     recovery = true;
   }
 
@@ -74,14 +78,10 @@ int main(int argc, char** argv) {
 
     KVClientTable<double> table = info.CreateKVClientTable<double>(kTableId);
 
-    for (int i = min_clock; i < 20; ++i) {
+    for (int i = min_clock; i < 10; ++i) {
       std::vector<Key> parameter_keys;  // parameters index
       for (int i = 0; i < 10; ++i)
         parameter_keys.push_back(i);
-      // std::vector<Key> parameter_values;
-      // for (int i = 0; i < 10; ++i)
-      //   parameter_keys.push_back(i);
-
       std::vector<double> ret;
       table.Get(parameter_keys, &ret);
       for (int i = 0; i < ret.size(); i++) {
