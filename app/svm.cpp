@@ -39,15 +39,13 @@ DEFINE_int32(n_iters, 10, "The number of interattions");
 
 namespace csci5570{
   std::vector<double> perception(const std::vector<lib::SVMSample>& samples, const std::vector<Key>& keys, const std::vector<double>& vals) {
-    std::vector<double> deltas(keys);
+    std::vector<double> deltas(vals);
     for (auto sample : samples) {
       auto& x = sample.x_;
       double y = sample.y_;
       double predict = 0.;
       int idx = 0;
       for (auto& field : x) {
-        while (keys[idx] < field.first)
-          ++idx;
         predict += vals[idx] * field.second;
       }
       predict += vals.back();
@@ -78,8 +76,6 @@ namespace csci5570{
       double predict = 0.;
       int idx = 0;
       for (auto& field : x) {
-        while (keys[idx] < field.first)
-          ++idx;
         predict += vals[idx] * field.second;
       }
       predict += vals.back();
