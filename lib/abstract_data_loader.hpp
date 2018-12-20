@@ -4,9 +4,9 @@
 #include <string>
 
 #include "boost/utility/string_ref.hpp"
-#include "io/line_input_format.hpp"
 
 #include "lib/parser.hpp"
+#include "io/line_input_format.hpp"
 
 namespace csci5570 {
 namespace lib {
@@ -23,37 +23,63 @@ class AbstractDataLoader {
    * @param parse        a parsing function
    * @param datastore    a container for the samples / external in-memory storage abstraction
    */
-
-  AbstractDataLoader(int id, int num_threads, Coordinator* Coordinator, std::string worker_hostname,
-                     std::string hdfs_namenode, int hdfs_namenode_port)
-      : id_(id),
-        num_threads_(num_threads),
-        coordinator_(Coordinator),
-        worker_hostname_(worker_hostname),
-        hdfs_namenode_(hdfs_namenode),
-        hdfs_namenode_port_(hdfs_namenode_port) {}
-
   template <typename Parse>  // e.g. std::function<Sample(boost::string_ref, int)>
-  void load(std::string url, int n_features, Parse parse, DataStore& datastore) {
+  static void load(std::string url, int n_features, Parse parse, DataStore* datastore) {
     // 1. Connect to the data source, e.g. HDFS, via the modules in io
     // 2. Extract and parse lines
     // 3. Put samples into datastore
-    LineInputFormat infmt(url, num_threads_, id_, &coordinator_, worker_hostname_, hdfs_namenode_, hdfs_namenode_port_);
-    boost::string_ref ref;
-    while (infmt.next(ref)) {
-      Sample samples = parse(ref, n_features);
-      datastore.push_back(samples);
-    }
+    std::string hdfs_namenode = "localhost";
+    int hdfs_namenode_port = 9000;
+    int master_port = 19817;  // use a random port number to avoid collision with other users
+    zmq::context_t zmq_context(1);
+
+    // 1. Spawn the HDFS block assigner thread on the master
+    std::thread master_thread([&zmq_context, master_port, hdfs_namenode_port, hdfs_namenode] {
+      HDFSBlockAssigner hdfs_block_assigner(hdfs_namenode, hdfs_namenode_port, &zmq_context, master_port);
+      hdfs_block_assigner.Serve();
+    });
+
+    // 2. Prepare meta info for the master and workers
+    int proc_id = getpid();  // the actual process id, or you can assign a virtual one, as long as it is distinct
+    std::string master_host = "localhost";  // change to the node you are actually using
+    std::string worker_host = "localhost";  // change to the node you are actually using
+
+    // 3. One coordinator for one process
+    Coordinator coordinator(proc_id, worker_host, &zmq_context, master_host, master_port);
+    coordinator.serve();
+    LOG(INFO) << "Coordinator begins serving";
+
+    // 4. The user thread runing UDF
+    std::thread worker_thread([hdfs_namenode_port, hdfs_namenode, &coordinator,
+                              worker_host, url, datastore, parse, n_features] {
+      int num_threads = 1;
+      int second_id = 0;
+
+      // load work
+      LineInputFormat infmt(url, num_threads, second_id, &coordinator, worker_host, hdfs_namenode, hdfs_namenode_port);
+      LOG(INFO) << "Line input is well prepared";
+
+      bool success = true;
+      int count = 0;
+      boost::string_ref record;
+      while (true) {
+        success = infmt.next(record);
+        if (success == false) break;
+        datastore->push_back(parse(record, n_features));
+        ++count;
+      }
+      LOG(INFO) << "The number of lines in " << url << " is " << count;
+
+      // Remember to notify master that the worker wants to exit
+      BinStream finish_signal;
+      finish_signal << worker_host << second_id;
+      coordinator.notify_master(finish_signal, 300);
+    });
+
+    // Make sure zmq_context and coordinator live long enough
+    master_thread.join();
+    worker_thread.join();
   }
-
- private:
-  int id_;
-  int num_threads_;
-  Coordinator* coordinator_;
-  std::string worker_hostname_;
-  std::string hdfs_namenode_;
-  int hdfs_namenode_port_;
-
 };  // class AbstractDataLoader
 
 }  // namespace lib
