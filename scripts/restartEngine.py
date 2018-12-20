@@ -2,6 +2,7 @@
 
 import os
 from os.path import dirname, join
+import sys
 
 # The file path should be related path from the project home path.
 # The hostfile should be in the format:
@@ -16,6 +17,10 @@ from os.path import dirname, join
 #
 # hostfile = "machinefiles/local"
 hostfile = "config/host"
+
+# is_recover = int(sys.argv[0]) # 1 -> recovery, 0 -> not recovery
+is_recover = sys.argv[0] # 1 -> recovery, 0 -> not recovery
+
 progfile = "build/SimpleExample"
 
 script_path = os.path.realpath(__file__)
@@ -28,6 +33,7 @@ print "hostfile_path:%s, prog_path:%s" % (hostfile_path, prog_path)
 
 params = {
     "config_file":hostfile_path,
+    "is_recover":is_recover
 }
 
 ssh_cmd = (
