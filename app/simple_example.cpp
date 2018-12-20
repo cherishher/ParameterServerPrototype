@@ -25,10 +25,8 @@ DEFINE_string(input, "", "The hdfs input url");
 
 int main(int argc, char** argv) {
   std::cout << "from sample app, argc: " << argc << std::endl;
-  for (int i = 0; i < argc; i++) {
-    std::cout << argv[i] << std::endl;
-  }
-  // gflags::ParseCommandLineFlags(&argc, &argv, true);
+  for(int i = 0;  i < argc; i++)
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   FLAGS_stderrthreshold = 0;
   FLAGS_colorlogtostderr = true;
@@ -37,9 +35,9 @@ int main(int argc, char** argv) {
 
   Node node{0, "localhost", 12353};
 
-  const char* is_recovery = argv[argc - 1];
+  const char* is_recovery = argv[argc-1];
   bool recovery = false;
-  if (is_recovery == "1") {
+  if(is_recovery == "1"){
     recovery = true;
   }
 
@@ -82,6 +80,10 @@ int main(int argc, char** argv) {
       std::vector<Key> parameter_keys;  // parameters index
       for (int i = 0; i < 10; ++i)
         parameter_keys.push_back(i);
+      // std::vector<Key> parameter_values;
+      // for (int i = 0; i < 10; ++i)
+      //   parameter_keys.push_back(i);
+
       std::vector<double> ret;
       table.Get(parameter_keys, &ret);
       for (int i = 0; i < ret.size(); i++) {
@@ -101,6 +103,5 @@ int main(int argc, char** argv) {
   // 3. Stop
   engine.StopEverything();
 
-  EngineManager em(node, {node});
   return 0;
 }
