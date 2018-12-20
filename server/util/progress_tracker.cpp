@@ -57,7 +57,7 @@ bool ProgressTracker::CheckThreadValid(int tid) const {
 
 void ProgressTracker::Backup(int model_id) {
   std::ofstream outfile;
-  std::string path = "/data/model" + std::to_string(model_id) + ".txt";
+  std::string path = "/data/tracker" + std::to_string(model_id) + ".txt";
   outfile.open(path);
   outfile << min_clock_ << "\n";
   for (auto iter = progresses_.begin(); iter != progresses_.end(); ++iter) {
@@ -66,9 +66,9 @@ void ProgressTracker::Backup(int model_id) {
   outfile.close();
 }
 
-void ProgressTracker::Recovery(int model_id) {
+int ProgressTracker::Recovery(int model_id) {
   std::ifstream ifs;
-  std::string path = "/data/model" + std::to_string(model_id) + ".txt";
+  std::string path = "/data/tracker" + std::to_string(model_id) + ".txt";
   ifs.open(path, std::ifstream::in);
   std::string s;
   ifs >> s;
@@ -86,6 +86,7 @@ void ProgressTracker::Recovery(int model_id) {
     count++;
   }
   ifs.close();
+  return min_clock_;
 }
 
 }  // namespace csci5570

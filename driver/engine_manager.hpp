@@ -47,7 +47,7 @@ class EngineManager : public Engine{
 		for (int i = 0; i < nodes_.size(); i++){
 			if (!(node_ == nodes_[i])) {
 				uint32_t to_node_thread_id = id_mapper_->GetHeartBeatThreadForId(nodes_[i].id);
-	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_, std::string("hdfs:///csci5570@group6/recovery/"+to_node_thread_id))); // append hdfs_address
+	  			std::unique_ptr<Engine> ptr(new Engine(nodes_[i], nodes_)); // append hdfs_address
 	  			ptr->StartEverything();
       			engine_group_.push_back(std::move(ptr));
   			}

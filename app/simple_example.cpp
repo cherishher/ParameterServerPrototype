@@ -33,7 +33,11 @@ int main(int argc, char** argv) {
 
   Node node{0, "localhost", 12353};
 
-  bool recovery = true;
+  const char* is_recover = argv[argc];
+  bool recovery = false;
+  if(is_recover == "1"){
+    recovery = true;
+  }
 
   Engine engine(node, {node});
   engine.StartEverything();

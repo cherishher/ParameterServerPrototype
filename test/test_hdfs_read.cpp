@@ -64,13 +64,13 @@ void HDFS_Read() {
       datastore.push_back(sample);
     }
 
-    // while (true) {
-    //   success = infmt.next(record);
-    //   if (success == false)
-    //     break;
-    //   ++count;
-    // }
-    // LOG(INFO) << "The number of lines in " << input << " is " << count;
+    while (true) {
+      success = infmt.next(record);
+      if (success == false)
+        break;
+      ++count;
+    }
+    LOG(INFO) << "The number of lines in " << input << " is " << count;
 
     // Remember to notify master that the worker wants to exit
     BinStream finish_signal;

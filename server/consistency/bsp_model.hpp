@@ -25,7 +25,7 @@ class BSPModel : public AbstractModel {
   virtual int GetProgress(int tid) override;
   virtual void ResetWorker(Message& msg) override;
   virtual void Backup() override;
-  virtual void Recovery() override;
+  virtual int Recovery() override;
 
   int GetGetPendingSize();
   int GetAddPendingSize();

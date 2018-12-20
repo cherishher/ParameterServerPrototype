@@ -20,18 +20,14 @@ class AbstractPartitionManager {
 
   AbstractPartitionManager(const std::vector<uint32_t>& server_thread_ids) : server_thread_ids_(server_thread_ids) {}
 
-  size_t GetNumServers() const {
-    return server_thread_ids_.size();
-  }
-  const std::vector<uint32_t>& GetServerThreadIds() const {
-    return server_thread_ids_;
-  }
+  size_t GetNumServers() const { return server_thread_ids_.size(); }
+  const std::vector<uint32_t>& GetServerThreadIds() const { return server_thread_ids_; }
 
   // slice keys into <server_id, key_partition> pairs
   virtual void Slice(const Keys& keys, std::vector<std::pair<int, Keys>>* sliced) const = 0;
   // slice key-value pairs into <server_id, key_value_partition> pairs
   virtual void Slice(const KVPairs& kvs, std::vector<std::pair<int, KVPairs>>* sliced) const = 0;
-  virtual std::vector<third_party::Range> GetRanges()=0;
+  virtual std::vector<third_party::Range> GetRanges() = 0;
 
  protected:
   std::vector<uint32_t> server_thread_ids_;

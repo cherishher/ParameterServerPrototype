@@ -17,7 +17,7 @@ void ASPModel::Clock(Message& msg) {
     return;
   int tid = msg.meta.sender;
   progress_tracker_.AdvanceAndGetChangedMinClock(tid);
-  if (progress_tracker_.GetMinClock() % 50 == 0){
+  if (progress_tracker_.GetMinClock() % 3 == 0){
     this->Backup();
   }
 }
@@ -65,9 +65,10 @@ void ASPModel::Backup() {
   progress_tracker_.Backup(model_id_);
 }
 
-void ASPModel::Recovery() {
+int ASPModel::Recovery() {
   storage_->Recovery(model_id_);
-  progress_tracker_.Recovery(model_id_);
+  int min_clock = progress_tracker_.Recovery(model_id_);
+  return min_clock;
 }
 
 }  // namespace csci5570

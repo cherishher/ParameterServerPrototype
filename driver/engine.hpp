@@ -35,13 +35,6 @@ class Engine {
   Engine(const Node& node, const std::vector<Node>& nodes) : node_(node), nodes_(nodes){};
   // Engine(const Node& node, const std::vector<Node>& nodes, const std::string hdfs_addr) : node_(node), nodes_(nodes),
   // hdfs_addr_(hdfs_addr){};
-  Engine(const Node& node, const std::vector<Node>& nodes, const std::string hdfs_addr, bool is_recover = false)
-      : node_(node), nodes_(nodes), hdfs_addr_(hdfs_addr) {
-    if (is_recover) {
-      // revovery logic
-      RecoveryEngine();
-    }
-  };
 
   /**
    * The flow of starting the engine:
@@ -61,12 +54,13 @@ class Engine {
   void StartMailbox();
   void StartSender();
 
-  void RecoveryEngine() {
-    StartEverything();
-    uint32_t model_count = RecoveryModelCount();
+  uint32_t RecoveryEngine() {
+    int model_count = RecoveryModelCount();
+    int min_clock;
     for (int i = 0; i < model_count; i++) {
-      RecoveryTable<double>(i);
+      min_clock = RecoveryTable<double>(i);
     }
+    return min_clock;
   }
 
   /**
@@ -122,7 +116,7 @@ class Engine {
     switch (storage_type) {
     case StorageType::Map:
       storage.reset(new MapStorage<Val>());
-      model_type_string = "Map";
+      storage_type_string = "Map";
       break;
     default:
       storage.reset(new MapStorage<Val>());
@@ -133,43 +127,45 @@ class Engine {
       switch (model_type) {
       case ModelType::ASP:
         model.reset(new ASPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
+        model->Backup();
         model_type_string = "ASP";
         break;
       case ModelType::BSP:
         model.reset(new BSPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
+        model->Backup();
         model_type_string = "BSP";
         break;
       case ModelType::SSP:
         model.reset(new SSPModel(table_id, std::move(storage), model_staleness, sender_->GetMessageQueue()));
+        model->Backup();
         model_type_string = "SSP";
         break;
       default:
         break;
       }
       server_thread_group_[i].get()->RegisterModel(table_id, std::move(model));
-      BackupTable(table_id, std::move(partition_manager), model_type_string, storage_type_string, model_staleness);
+      BackupTable(table_id, model_type_string, storage_type_string, model_staleness);
     }
+    BackupModelConunt();
     return table_id;
   }
 
-  void BackupTable(uint32_t table_id, std::unique_ptr<AbstractPartitionManager> partition_manager,
-                   std::string model_type, std::string storage_type, int model_staleness = 0) {
+  void BackupTable(uint32_t table_id, std::string model_type, std::string storage_type, int model_staleness = 0) {
     std::ofstream outfile;
     std::string path = "/data/table" + std::to_string(table_id) + ".txt";
     outfile.open(path);
-    auto range = partition_manager->GetRanges();
+    auto range = partition_manager_map_[table_id]->GetRanges();
     outfile << model_type << "\n";
     outfile << storage_type << "\n";
     outfile << model_staleness << "\n";
     for (int i = 0; i < range.size(); i++) {
       outfile << range[i].begin() << " " << range[i].end() << "\n";
     }
-
     outfile.close();
   }
 
   template <typename Val>
-  void RecoveryTable(uint32_t table_id) {
+  int RecoveryTable(uint32_t table_id) {
     std::ifstream ifs;
     std::string path = "/data/table" + std::to_string(table_id) + ".txt";
     ifs.open(path, std::ifstream::in);
@@ -180,44 +176,43 @@ class Engine {
     std::string storage_type_string = s;
     ifs >> s;
     int model_staleness = std::stoi(s);
-    const std::vector<uint32_t> sids = id_mapper_->GetAllServerThreads();
+    const std::vector<uint32_t> sids = GetServerThreadIds();
     // build ranges
-    int count = sids.size();
-    std::vector<third_party::Range> ranges(count);
+    int sid_size = sids.size();
+    std::vector<third_party::Range> ranges;
     int begin = 0;
     int end = 0;
     while (ifs >> s) {
-      if (count % 2 == 0) {
-        begin = std::stoi(s);
-      } else {
-        end = std::stoi(s);
-        third_party::Range range(begin, end);
-        ranges.push_back(range);
-      }
+      begin = std::stoi(s);
+      ifs >> s;
+      end = std::stoi(s);
+      third_party::Range range(begin, end);
+      ranges.push_back(range);
     }
-    // for (auto iter = storage_.begin(); iter != storage_.end(); iter++) {
-    //   std::cout << "key:" << iter->first << " value:" << iter->second << std::endl;
-    // }
     ifs.close();
     std::unique_ptr<AbstractPartitionManager> partition_manager(new RangePartitionManager(sids, ranges));
     RegisterPartitionManager(table_id, std::move(partition_manager));
 
     std::unique_ptr<AbstractModel> model;
     std::unique_ptr<AbstractStorage> storage;
+    int min_clock;
     storage.reset(new MapStorage<Val>());
     for (int i = 0; i < server_thread_group_.size(); i++) {
       if (model_type_string == "ASP") {
         model.reset(new ASPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
-        model->Recovery();
+        min_clock = model->Recovery();
       } else if (model_type_string == "BSP") {
         model.reset(new BSPModel(table_id, std::move(storage), sender_->GetMessageQueue()));
-        model->Recovery();
+        min_clock = model->Recovery();
       } else {
         model.reset(new SSPModel(table_id, std::move(storage), model_staleness, sender_->GetMessageQueue()));
-        model->Recovery();
+        min_clock = model->Recovery();
+        printf("model recovery finish\n");
       }
       server_thread_group_[i].get()->RegisterModel(table_id, std::move(model));
+      printf("Register model finish\n");
     }
+    return min_clock;
   }
 
   void BackupModelConunt() {
@@ -250,13 +245,13 @@ class Engine {
   template <typename Val>
   uint32_t CreateTable(ModelType model_type, StorageType storage_type, int model_staleness = 0) {
     // get server thread ids
-    const std::vector<uint32_t> sids = id_mapper_->GetAllServerThreads();
+    const std::vector<uint32_t> sids = GetServerThreadIds();
 
     // build ranges
     int count = sids.size();
     std::vector<third_party::Range> ranges(count);
     //  TODO... implement ranges
-    ranges = {{0, 20}, {20, 40}, {40, 60}, {60, 80}, {80, 100}, {100, 120}};
+    ranges = {{0, 20}, {20, 40}, {40, 60}, {60, 80}, {80, 110}};
     // build partition manager
     std::unique_ptr<AbstractPartitionManager> partition_manager(new RangePartitionManager(sids, ranges));
     uint32_t table_id = CreateTable<Val>(std::move(partition_manager), model_type, storage_type, model_staleness);

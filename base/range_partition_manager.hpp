@@ -106,7 +106,7 @@ class RangePartitionManager : public AbstractPartitionManager {
   	}
   }
 
-  std::vector<third_party::Range> GetRanges(){
+  std::vector<third_party::Range> GetRanges() override {
 	  return ranges_;
   }
 

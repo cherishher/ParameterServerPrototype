@@ -45,7 +45,7 @@ class ProgressTracker {
 
   void Backup(int model_id);
 
-  void Recovery(int model_id);
+  int Recovery(int model_id);
 
  private:
   std::map<int, int> progresses_;  // {tid: progress}
