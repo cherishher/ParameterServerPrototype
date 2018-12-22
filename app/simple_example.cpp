@@ -93,7 +93,6 @@ int main(int argc, char** argv) {
         std::cout << "parameter is :" << ret[j] << std::endl;
         ret[j]++;
       }
-    }
 
     table.Add(parameter_keys, ret);
 
