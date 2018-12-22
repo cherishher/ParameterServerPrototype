@@ -75,35 +75,36 @@ int main(int argc, char** argv) {
     KVClientTable<double> table = info.CreateKVClientTable<double>(kTableId);
 
     std::vector<Key> parameter_keys;  // parameters index
-    std::vector<double> ret;          // parameter values
+    std::vector<double> initial;          // parameter values
 
     if (min_clock == 0) {
       // initial parameters
       for (int m = 0; m < 10; m++) {
         parameter_keys.push_back(m);
-        ret.push_back(0);
+        initial.push_back(0);
       }
-      table.Add(parameter_keys, ret);
+      table.Add(parameter_keys, initial);
     }
 
     // calculate and update parameters
     for (int i = min_clock; i < 20; i++) {
+      std::vector<double> ret;  // parameter values
       table.Get(parameter_keys, &ret);
       for (int j = 0; j < ret.size(); j++) {
         std::cout << "parameter is :" << ret[j] << std::endl;
         ret[j]++;
       }
 
-    table.Add(parameter_keys, ret);
+      table.Add(parameter_keys, ret);
 
-    table.Clock();
+      table.Clock();
     }
-});
+  });
 
-engine.Run(task);
+  engine.Run(task);
 
-// 3. Stop
-engine.StopEverything();
+  // 3. Stop
+  engine.StopEverything();
 
-return 0;
+  return 0;
 }
