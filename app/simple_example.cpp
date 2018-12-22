@@ -93,19 +93,18 @@ int main(int argc, char** argv) {
         std::cout << "parameter is :" << ret[j] << std::endl;
         ret[j]++;
       }
-
-      std::cout << "min_clock is:" << min_clock << std::endl;
-
-      table.Add(parameter_keys, ret);
-
-      table.Clock();
     }
-  });
 
-  engine.Run(task);
+    table.Add(parameter_keys, ret);
 
-  // 3. Stop
-  engine.StopEverything();
+    table.Clock();
+    }
+});
 
-  return 0;
+engine.Run(task);
+
+// 3. Stop
+engine.StopEverything();
+
+return 0;
 }
