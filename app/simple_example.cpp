@@ -24,9 +24,8 @@ DEFINE_string(config_file, "", "The config file path");
 DEFINE_string(input, "", "The hdfs input url");
 
 int main(int argc, char** argv) {
-  std::cout << "from sample app, argc: " << argc << std::endl;
-  for(int i = 0;  i < argc; i++)
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  for (int i = 0; i < argc; i++)
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   FLAGS_stderrthreshold = 0;
   FLAGS_colorlogtostderr = true;
@@ -35,9 +34,8 @@ int main(int argc, char** argv) {
 
   Node node{0, "localhost", 12353};
 
-  const char* is_recovery = argv[argc-1];
   bool recovery = false;
-  if(is_recovery == "1"){
+  if (std::strcmp(argv[argc - 2], "1") == 0) {
     recovery = true;
   }
 
@@ -53,7 +51,7 @@ int main(int argc, char** argv) {
     //   engine.Barrier();
   } else {
     // 1.1 Create table
-    kTableId = engine.CreateTable<double>(ModelType::ASP, StorageType::Map);  // table 0
+    kTableId = engine.CreateTable<double>(ModelType::SSP, StorageType::Map);  // table 0
     engine.Barrier();
   }
 
@@ -76,20 +74,19 @@ int main(int argc, char** argv) {
 
     KVClientTable<double> table = info.CreateKVClientTable<double>(kTableId);
 
-    for (int i = min_clock; i < 10; ++i) {
+    for (int i = min_clock; i < 20; i++) {
       std::vector<Key> parameter_keys;  // parameters index
-      for (int i = 0; i < 10; ++i)
-        parameter_keys.push_back(i);
-      // std::vector<Key> parameter_values;
-      // for (int i = 0; i < 10; ++i)
-      //   parameter_keys.push_back(i);
+      for (int m = 0; m < 10; m++)
+        parameter_keys.push_back(m);
 
       std::vector<double> ret;
       table.Get(parameter_keys, &ret);
-      for (int i = 0; i < ret.size(); i++) {
-        std::cout << "parameter is :" << ret[i] << std::endl;
-        ret[i]++;
+      for (int j = 0; j < ret.size(); j++) {
+        std::cout << "parameter is :" << ret[j] << std::endl;
+        ret[j]++;
       }
+
+      std::cout << "min_clock is:" << min_clock << std::endl;
 
       // std::vector<double> vals{0.5};
       table.Add(parameter_keys, ret);

@@ -17,7 +17,7 @@ void ASPModel::Clock(Message& msg) {
     return;
   int tid = msg.meta.sender;
   progress_tracker_.AdvanceAndGetChangedMinClock(tid);
-  if (progress_tracker_.GetMinClock() % 3 == 0){
+  if (progress_tracker_.GetMinClock() % 10 == 0){
     this->Backup();
   }
 }

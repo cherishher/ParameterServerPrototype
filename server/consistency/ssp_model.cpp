@@ -24,6 +24,9 @@ void SSPModel::Clock(Message& msg) {
       if (pending.meta.flag == Flag::kGet)
         Get(pending);
     }
+    if(cur_mini_clock % 10 == 0){
+      this->Backup();
+    }
   }
 }
 
