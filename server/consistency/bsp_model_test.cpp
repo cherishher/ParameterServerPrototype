@@ -120,7 +120,8 @@ TEST_F(TestBSPModel, CheckGetAndAdd) {
   model->Get(cm2);
 
   Message check_msg2;
-  ASSERT_EQ(reply_queue.Size(), 1);
+  ASSERT_EQ(reply_queue.Size(), 2);
+  reply_queue.WaitAndPop(&check_msg2);
   reply_queue.WaitAndPop(&check_msg2);
   auto rep_keys2 = third_party::SArray<int>(check_msg2.data[0]);
   auto rep_vals2 = third_party::SArray<int>(check_msg2.data[1]);

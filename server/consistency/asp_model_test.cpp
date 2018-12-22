@@ -123,7 +123,7 @@ TEST_F(TestASPModel, CheckGetAndAdd) {
   msg.AddData(third_party::SArray<int>{1});  // value
   model->Add(msg);
 
-  ASSERT_EQ(reply_queue.Size(), 1);
+  ASSERT_EQ(reply_queue.Size(), 2);
   reply_queue.WaitAndPop(&check_msg);
   EXPECT_EQ(check_msg.meta.flag, Flag::kGet);
   EXPECT_EQ(check_msg.meta.sender, 0);
@@ -146,7 +146,8 @@ TEST_F(TestASPModel, CheckGetAndAdd) {
   model->Clock(msg);
   model->Get(msg);
 
-  ASSERT_EQ(reply_queue.Size(), 1);
+  ASSERT_EQ(reply_queue.Size(), 2);
+  reply_queue.WaitAndPop(&check_msg);
   reply_queue.WaitAndPop(&check_msg);
   EXPECT_EQ(check_msg.meta.flag, Flag::kGet);
   EXPECT_EQ(check_msg.meta.sender, 0);
@@ -178,7 +179,8 @@ TEST_F(TestASPModel, CheckGetAndAdd) {
   msg.AddData(third_party::SArray<int>{0});  // key
   model->Get(msg);
 
-  ASSERT_EQ(reply_queue.Size(), 1);
+  ASSERT_EQ(reply_queue.Size(), 2);
+  reply_queue.WaitAndPop(&check_msg);
   reply_queue.WaitAndPop(&check_msg);
   EXPECT_EQ(check_msg.meta.flag, Flag::kGet);
   EXPECT_EQ(check_msg.meta.sender, 0);

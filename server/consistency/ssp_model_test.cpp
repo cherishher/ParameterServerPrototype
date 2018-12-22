@@ -90,7 +90,9 @@ TEST_F(TestSSPModel, CheckGetAndAdd) {
   auto rep_keys = third_party::SArray<int>();
   auto rep_vals = third_party::SArray<int>();
 
-  ASSERT_EQ(reply_queue.Size(), 2);
+  ASSERT_EQ(reply_queue.Size(), 4);// 2 -> 4
+  reply_queue.WaitAndPop(&check_msg);// add
+  reply_queue.WaitAndPop(&check_msg);// add
 
   reply_queue.WaitAndPop(&check_msg);
   ASSERT_EQ(check_msg.data.size(), 2);
