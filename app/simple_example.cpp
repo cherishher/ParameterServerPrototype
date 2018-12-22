@@ -75,14 +75,14 @@ int main(int argc, char** argv) {
     KVClientTable<double> table = info.CreateKVClientTable<double>(kTableId);
 
     std::vector<Key> parameter_keys;  // parameters index
-    std::vector<double> initial;          // parameter values
+    std::vector<double> initial;      // parameter values
 
+    // initial parameters
+    for (int m = 0; m < 10; m++) {
+      parameter_keys.push_back(m);
+      initial.push_back(0);
+    }
     if (min_clock == 0) {
-      // initial parameters
-      for (int m = 0; m < 10; m++) {
-        parameter_keys.push_back(m);
-        initial.push_back(0);
-      }
       table.Add(parameter_keys, initial);
     }
 
