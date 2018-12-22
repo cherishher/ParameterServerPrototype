@@ -76,12 +76,15 @@ int main(int argc, char** argv) {
 
     std::vector<Key> parameter_keys;  // parameters index
     std::vector<double> ret;          // parameter values
-    // initial parameters
-    for (int m = 0; m < 10; m++) {
-      parameter_keys.push_back(m);
-      ret.push_back(0);
+
+    if (min_clock == 0) {
+      // initial parameters
+      for (int m = 0; m < 10; m++) {
+        parameter_keys.push_back(m);
+        ret.push_back(0);
+      }
+      table.Add(parameter_keys, ret);
     }
-    table.Add(parameter_keys, ret);
 
     // calculate and update parameters
     for (int i = min_clock; i < 20; i++) {
